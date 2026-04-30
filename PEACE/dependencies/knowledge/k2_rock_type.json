@@ -1,0 +1,2914 @@
+[
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "conglomeratic"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "fan alluvium undifferentiated"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "argillite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "dolostone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "alluvium"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "fan alluvium"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "slade formation"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "phyllitic argillite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "chlorite phyllonite"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "Igneous rocks"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "dacitic lavas with distinctive purple color"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "ultramafic"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "pyroclastics"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "pyroclastic deposits"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "mafic lavas"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "ultramafic rock"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "granodioritic"
+    },
+    {
+        "rock_value": "Igneous rocks",
+        "rock_name": "reinecker ridge volcanic"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "to be determined"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Sedimentary"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "unconsolidated sediments"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Unconsolidated sediments"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "clay"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "mild clay"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "sand"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "gravel"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "boulder"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "loess"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "ooze"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "peat"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "siliceous ooze"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "clastic rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Clastic rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "conglomerate"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "breccia"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "tillite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "pebbled sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "lithic sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "arkose"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "graywacke"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "feldspar quartz arenite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "quartzose sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "glauconitic sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "oil bearing sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "copper bearing sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "phosphor bearing sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "siltstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "silty mudstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "silty shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "mudstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "claystone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "calcareous shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "ferruginous shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "siliceous shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "charcoal shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "black shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "calcareous sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "tuffaceous sandstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "calcareous mudstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "siliceous mudstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "charocal mudstone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "tuffite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "charocal siliceous shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "quartzose conglomerate"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "carbonate rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Carbonate rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "marl"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "intraclastic limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "bioclastic limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "ooid limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "biolimestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "reefal limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "stromatiolitic limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "siliceous limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "chert limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "knotty-like limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "bituminous carbonate rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "iron-manganese module bearing limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "manganic carbonate rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "iron-rich carbonate rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "copper-bearing carbonate rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "dolomitic limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "dolomite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "intraclastic dolomite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "argillaceous dolomite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "algal dolomite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "stromatolite dolomite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "charcoal dolomite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "stripe siliceous dolomite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "clastic limestone"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "siliceous rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Siliceous rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "diatomite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "diatomaceous earth"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "chert"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "jasper rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "spongolite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "radiolarian chert"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "aluminous rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Aluminous rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "ferruginous rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Ferruginous rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "hematite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "siderite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "jaspilite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "sulfated ferruginous rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "ferromanganese rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "phosphoratic rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Phosphorate rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "phosphoric rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "pelitic phosphorite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "biophosphorite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "galuconitic phosphorite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "evaporite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "Evaporite rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "trona"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "gypsum"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "halilith"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "carnallitolite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "mirabilite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "kainite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "combustible organic rock"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "combustible organic rocks"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "coal"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "oil shale"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "lignite"
+    },
+    {
+        "rock_value": "Sedimentary rocks",
+        "rock_name": "stone coal"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "acid  volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Acid  volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "rhyolite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "alkali feldspar rhyolite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "dacite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "trachydacite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "keratophyre"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "quartz keratophyre"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "meta acid volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "intermediate volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Intermediate volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "andesite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "basalt andesite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "boninite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "icelandite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "high magnesium andesite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "alkali feldspar trachyte"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "trachyte"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "latite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "trachyandesite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "meta intermediate volcanic"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "basic volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Basic volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "basalt"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "high alumina basalt"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "picrobasalt"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "flood  basalt"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "middle ocean ridge basalt"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "trachy basalt"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "tholeiite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "shoshonite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "hawaiite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "picrite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "spilite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "meta basic volcanic"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "andesitic basalt"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "meta andesitic basalt"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "pillow lava"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "ultrabasic volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Ultrabasic volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "ultramafitite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "meymechite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "komatiite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "alkali volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Alkali volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "leucitite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "analcimite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "phonolite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "basanite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "tephrite"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "pyroclastic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Pyroclastic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "rhyolite pyroclastic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "dacite pyroclastic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "andesite pyroclastic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "trachyandesite pyroclastic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "basalt pyroclastic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "phonolite pyroclastic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "tuff"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "intermediate-basic volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Intermediate-basic volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "basic-ultrabasic volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Basic-ultrabasic volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "bimodel volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Bimodel volcanic rocks"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "acid-intermediate volcanic rock"
+    },
+    {
+        "rock_value": "Volcanic rocks",
+        "rock_name": "Acid-Intermediate volcanic rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "Intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "acid intrusive rock"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "Acid intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "alkali feldspar granite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "granite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "syenogranite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "monzo granite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "granodiorite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "tonalite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "plagiogranite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "rapakivi granite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "charnockite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "granite-porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "monzo granite-porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "granite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "monzonite granite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "granodiorite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "plagiogranite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "tonalite diorite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "migmatitis granite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "miarolite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "granodiorite porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "Intermediate  intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "Intermediate intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "alkali feldspar syenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "syenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "syenite porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz syenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz syenite-porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "monzonite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz monzonite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz monzonite porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "monzodiorite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "diorite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz diorite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz dioriteoporphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz monzonite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "monzonite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "diorite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz alkali feldspar syenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "monzonite porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz monzodiorite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "diorite porphyry"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz diorite gneiss"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "charno-monzonite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "basic intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "Basic intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "anorthosite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "quartz anorthosite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "gabbro"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "hornblende gabbro"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "pyroxenx hornblende gabbro"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "monzogabbro"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "diabase"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "gabbro norite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "norite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "olivine norite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "troctolite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "olivine gabbro"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "ultrabasic intrusive rock"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "Ultrabasic intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "hornblendite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "pyroxene hornblendite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "olivine hornblendite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "olivine pyroxene hornblendite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "pyroxenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "clinopyroxenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "websterite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "orthopyroxenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "olivine pyroxenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "olivine websterite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "olivine clinopyroxenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "peridotite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "pyroxene peridotite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "lherzolite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "wehrlite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "harzburgite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "hornblende peridotite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "dunite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "ultramafitolite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "lamprophyre"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "melilitite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "hornblende pyroxenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "alkaline intrusive rock"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "Alkaline intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "foid syenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "foid monzosyenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "foid monzodiorite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "foid monzogabbro"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "foid diorite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "foid gabbro"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "alkali gabbro"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "foidolite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "foidite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "nephelinite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "sodalitite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "aegineite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "ijolite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "nepheline syenite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "lamproite"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "Others intrusive rocks"
+    },
+    {
+        "rock_value": "Intrusive rocks",
+        "rock_name": "kimberlite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Metamorphic rocks"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "slate"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Slate"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "calcareous slate"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "siliceous slate"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "charcoal slate"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "sandy slate"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "pebble-bearing slate"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "phyllite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Phyllite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "sericite phyllite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "chlorite phyllite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "calcareous phyllite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "epidote phyllite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "pebble-bearing phyllite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "metacarbonatite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Meta carbonatite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "crystalline limestone"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "crystalline dolomite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "marble"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "dolomite-marble"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "glaucophane marble"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "chlorite schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "mica schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "quartz mica schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "graphitic schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "actionlite schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "amphibole schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "talc schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "serpentine schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "calc-silicate schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "andalusite (cordierite) mica schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "blueschist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "lawsonite glaucophane schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "stilpnomelane schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "lawsonite chlorite schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "phengite schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "white schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "staurolite (kyanite) schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "sillimanite (garnet) schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "tourmaline mica schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "apatite-rich mica schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "quartz schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "sericite schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "albite schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "amphibolite schist"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "K-feldspar gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "plagiogneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "amphibole plagiogneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "sillimanite plagiogneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "monzonitic gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "diopside monzonitic gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "alkaline feldspar (monzonite) gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "amphibole gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "plagio-amphibole gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "albite gneiss"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "quartzite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "quartzite/itabirite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "feldspathic quartzite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "quartz magnetitite rock"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "glaucophane quartzite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "iron-bearing jasper rock"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "itabirite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "amphibolite and pyroxenite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "plagio-diopsidite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "amphibole diopsidite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "diopsidite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "meta-pyroxenite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "amphibolite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "migmatite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Migmatite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "granulite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Granulite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "hypersthene plagio granulite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "two pyroxene granulite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "two pyroxene olivine granulite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "leptynite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "Other metamorphic rocks"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "leptite"
+    },
+    {
+        "rock_value": "Metamorphic rocks",
+        "rock_name": "serpentite"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "玄武岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "硅化"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "矿化"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "石化"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "母化"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "岩化"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "土化"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "闪岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "酸性岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "斜长石化"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "白云母化"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "片麻理"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "片理"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "堆积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "沉积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "冲积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "湖积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "黏土"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "粘土"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "洪积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "风积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "风积沙"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "泥"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "风成沙"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "碎石"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "土"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "沙地"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "沙丘"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "海积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "淤泥"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "坡积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "砾岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "碎屑岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "沉积岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "砂砾岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "砂岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "细砂岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "粉砂岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "泥岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "页岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "凝灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "粘土岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "白云岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "碳酸盐岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "硅质白云岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "粉晶白云岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "泥晶白云岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "泥质白云岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "燧石条带白云岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "细粒白云岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "灰质白云岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "白云质灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "生物碎屑灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "叠层石灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "泥晶灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "亮晶灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "泥质灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "竹叶状灰岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "生物岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "砂"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "松散堆积物"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "砾"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "砂砾"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "粉砂"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "细砂"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "中砂"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "粗砂"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "黄土"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "亚黏土"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "亚砂土"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "未分的超基性岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "超基性侵入岩及煌斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "橄榄岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "纯橄岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二辉橄榄岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斜(方)辉(石)橄榄岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "异剥橄榄岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉石岩类（辉石岩和角闪石岩）"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉石岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "橄榄二辉岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斜方辉石岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二辉岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "角闪石岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "蛇蚊岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "玻基橄榄岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "云斜煌斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "闪正煌斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "闪斜煌斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "黄长煌斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "煌斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "橄黄煌斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斜长煌斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "钾镁煌斑岩（橄榄金云火山岩）"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "云煌岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "金伯利岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉石角闪石岩及角闪石辉石岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "紫苏角闪石岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉橄岩及橄辉岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "未分基性岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "基性侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长辉绿岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二长辉长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "橄榄辉长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "苏长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斜长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长伟晶岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉绿岩及辉绿玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长辉绿玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长苏长玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "正长辉长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "未分中性岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "中性侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二长闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "黑云母闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "正长闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二长斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "正长斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "角闪石正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉石正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉石闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "角闪石闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉石二长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英碱长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英辉长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英碱性正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "紫苏二长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "闪长玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长闪长玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉石闪长玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英闪长玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "未分的花岗岩类"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "酸性－中酸性侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "碱长花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "正长花岗岩（钾长花岗岩）"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二长花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "花岗闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "英云闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "黑云母花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二云母花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "白岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斜长花岗岩类"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斜长花岗岩（奥长花岗岩）"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斜长花岗斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "正长花岗斑岩（钾长花岗斑岩）"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英二长闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英正长斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英二长斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "碱性花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英二长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "花岗斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "细晶岩（脉）"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "花岗细晶岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "花岗闪长斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二长花岗斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "伟晶岩（脉）"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "花岗伟晶岩或伟晶花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英闪长斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "石英二长闪长斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "碱长花岗斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "环斑花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "晶洞花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "紫苏花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "钠长斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "二长石英闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "白云母花岗闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斑状花岗闪长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斑状二长花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斑状二云母二长花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斑状石英二长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斑状正长花岗岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "未分的碱性岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "碱性侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "碱性正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "霞石正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "斑霞正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "霓霞岩及磷霞岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "碳酸岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "云霞正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "霓霞正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "霞石橄辉玢岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "白榴石斑岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "霓辉石碱长正长岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "未分基性超基性岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "特殊地质体"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "蛇绿岩及蛇绿混杂岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "未分的超基性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "超基性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "苦橄岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "碱性苦橄岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "麦美奇岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "科马提岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "黄长岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "苦橄玢岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "未分的基性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "基性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "细碧岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "玄武岩粗玄岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "苦橄玄武岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "玄武质玻璃岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "基性熔岩的球颗玄武岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "玄武玢岩（橄榄玄武玢岩）"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "碱性玄武岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "橄榄辉石玄武岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "橄榄粗玄岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "未分中性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "中性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "安山岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "玄武安山岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英安山岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "安山玢岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "粗面安山岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "粗面岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英粗面岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "安粗岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英安粗岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英碱长粗面岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "粗面斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "粗(面)安(山)斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英粗安斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "玄武安山玢岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英粗面斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "辉石安山岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "未分的酸性及中酸性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "酸性－中酸性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "流纹岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "流纹斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "碱长流纹岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "碱长英安流纹岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "英安流纹岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英角斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "霏细斑岩霏细岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英霏细斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "英安岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英英安岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "英安玢岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "角斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "浮石岩，黑曜岩，珍珠岩，松脂岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "石英钠长斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "斑流岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "英安流纹斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "未分的钠长斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "英安钠长斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "安山钠长斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "未分碱性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "碱性喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "响岩等"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "碱性粗面岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "绢云板岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "板岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "变质岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "硅质板岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "含砾板岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "杂色板岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "泥质板岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "砂质板岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "绢云千枚岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "千枚岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "钙质千枚岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "炭质千枚岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "二云片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "蓝晶石片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "二云石英片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "绢云石英片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "石英片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "斜长角闪片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "钠长片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "角闪片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "石墨片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "黑云片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "绿泥片岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "黑云斜长片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "角闪斜长片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "二云斜长片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "英云闪长质片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "钾长花岗质片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "石英闪长质片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "花岗质片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "角闪片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "斜长片麻岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "紫苏麻粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "麻粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "黑云变粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "浅粒岩-变粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "石墨变粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "钠长浅粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "角闪变粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "角闪斜长变粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "斜长角闪岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "石墨大理岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "大理岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "白云质大理岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "条带大理岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "榴辉岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "角岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "矽卡岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "石英岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "其他变质岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "碎斑岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "变粒岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "蛇纹岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "碎裂岩"
+    },
+    {
+        "rock_value": "变质岩",
+        "rock_name": "糜棱岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "燧石岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "冲海积"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "硅质岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "黄石"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "南沱冰碛岩"
+    },
+    {
+        "rock_value": "沉积岩",
+        "rock_name": "冰碛岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "印支旋回辉绿岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "基性浅成侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "前寒武纪片麻状辉绿岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "基性浅成侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "基性深成侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "变辉绿岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "沸石杆榄辉绿岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉长石"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "闪长(玢)岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "中性侵入岩"
+    },
+    {
+        "rock_value": "侵入岩",
+        "rock_name": "辉绿岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "英安流纹质晶屑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "火山岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "火山熔岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "喷出岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "喷发岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "安山玄武玢岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "辉石玢岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "英安斑岩"
+    },
+    {
+        "rock_value": "喷发岩",
+        "rock_name": "娘娘山火山岩锲"
+    }
+]

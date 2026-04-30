@@ -1,0 +1,37 @@
+[
+    {
+        "id": 0,
+        "question": "What is the function of title in geologic map?",
+        "answer": "Title clearly identifies the specific area or region covered by the geologic map, making it easy for users to understand the geographic scope of the map.</s>"
+    },
+    {
+        "id": 1,
+        "question": "What is the function of cross section in geologic map?",
+        "answer": "Cross section is a graphical representation of the geology of an area. They are used to show the stratigraphy and structure of a geological formation. Cross sections can be vertical or horizontal, depending on the type of information that is being presented.</s>"
+    },
+    {
+        "id": 2,
+        "question": "What is the function of stratigraphic column in geologic map?",
+        "answer": "Stratal column is used to show the relative position of rock layers in a geologic map. They are useful in determining the age of the rocks and the sequence in which they were deposited. The columns also provide information about the lithology, texture, and color of each rock layer, as well as the presence of fossils, sedimentary structures, or other features that can help to identify the type of depositional environment.</s>"
+    },
+    {
+        "id": 3,
+        "question": "What is the function of legend in geologic map?",
+        "answer": "Legend is used to provide information about the symbols and colors used on a geologic map. They are usually located at the bottom of the map, and contain information such as the type of rock or mineral being represented by each symbol, the color used for each rock type, as well as any other relevant information.</s>"
+    },
+    {
+        "id": 4,
+        "question": "What is the function of scale in geologic map?",
+        "answer": "Scale is used to indicate the relative size of geological features on a map. For example, a scale of 1:20,00 would mean that a feature on the map that is 2 inches (5 cm) wide would represent a 40-mile (64 km) long feature in the real world. Scales can be expressed in different units, such as miles, kilometers, or nautical miles.</s>"
+    },
+    {
+        "id": 5,
+        "question": "What is the function of index map in geologic map?",
+        "answer": "Index map is used to show the location of the geologic map in relation to the surrounding area. The index map is usually a topographic map that shows the elevation, slope, drainage pattern, and other geomorphological features. It is used as a reference to locate the area of interest on the main map.</s>"
+    },
+    {
+        "id": 6,
+        "question": "What is the function of main map in geologic map?",
+        "answer": "The main map in a geologic map is used to show the location of the study area. It is usually a topographic map that shows the elevation and slope of a region. This information is important for understanding the geology of an area, as it can indicate the presence of faults, folds, and other features that can affect the distribution of rock types and mineral deposits.</s>"
+    }
+]

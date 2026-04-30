@@ -1,0 +1,17 @@
+settings_version: 0.0.4
+datasets_dir: E:\task2\datasets
+weights_dir: E:\task2\PEACE\weights
+runs_dir: E:\task2\PEACE\runs
+uuid: 8399894fa2868bfec41ef50ce6025e644a83d3556685bf3d5a3b1d672aeb2efd
+sync: true
+api_key: ''
+openai_api_key: ''
+clearml: true
+comet: true
+dvc: true
+hub: true
+mlflow: true
+neptune: true
+raytune: true
+tensorboard: true
+wandb: true
