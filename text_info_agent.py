@@ -30,6 +30,7 @@ class StratumItem(BaseModel):
     distribution: Optional[str] = Field(None, description="分布")
     # ❌ 移除了 creator 字段，专注核心物理特征约束
     rock_features: Optional[str] = Field(None, description="岩石特征概括（限30字内）")
+    confidence: float = Field(0.0, ge=0.0, le=1.0, description="该地层条目的置信度")
 
 
 class ProfileItem(BaseModel):
@@ -40,6 +41,7 @@ class ProfileItem(BaseModel):
     underlying_stratum: Optional[str] = Field(None, description="下伏层")
     overlying_stratum: Optional[str] = Field(None, description="上覆层")
     rock_combination: Optional[str] = Field(None, description="岩石组合概括（限30字内）")
+    confidence: float = Field(0.0, ge=0.0, le=1.0, description="该剖面条目的置信度")
 
 
 class LLMExtraction(BaseModel):
@@ -48,8 +50,8 @@ class LLMExtraction(BaseModel):
 
 
 class TextInfoResult(BaseModel):
-    strata: List[Any] = []
-    profiles: List[Any] = []
+    strata: List[Any] = Field(default_factory=list)
+    profiles: List[Any] = Field(default_factory=list)
     source_text: str = ""
 
 
@@ -79,7 +81,7 @@ class TextInfoAgent:
             self.structural_llm = self.llm
 
         # 设置动态重叠分块
-        self.splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=200)
+        self.splitter = RecursiveCharacterTextSplitter(chunk_size=6000, chunk_overlap=300)
         self.graph = self._build_graph()
 
     def _extract_node(self, state: AgentState):
@@ -100,6 +102,12 @@ class TextInfoAgent:
             "指令：请逐字逐句阅读文本，准确提取【岩石地层】和【剖面】实体。\n"
             "【极端警告】：如果没有提及某个字段，必须返回 null。\n"
             "【防截断警告】：对于岩石特征等长文本描述，请进行高度浓缩概括（限制在30个字以内），严禁抄写原文大段描述！\n"
+            "【置信度打分标准】：对每个提取条目，根据证据充分度给出 confidence (0.0-1.0)：\n"
+            "  - 1.0: 文本明确提及，所有字段有直接依据\n"
+            "  - 0.7-0.9: 大部分字段有明确依据，少量字段需推断\n"
+            "  - 0.4-0.6: 部分字段需通过上下文间接推断\n"
+            "  - 0.1-0.3: 仅模糊提及，高度不确定\n"
+            "  - 0.0: 完全无证据\n"
         )
         if instruction:
             system_msg += f"\n特别要求: {instruction}"
@@ -118,7 +126,8 @@ class TextInfoAgent:
               "formation_age_code_2": "次级年代代号",
               "province": "省份",
               "distribution": "分布",
-              "rock_features": "岩石特征概括"
+              "rock_features": "岩石特征概括",
+              "confidence": 0.95
             }
           ],
           "profiles": [
@@ -129,7 +138,8 @@ class TextInfoAgent:
               "location": "位置",
               "underlying_stratum": "下伏层",
               "overlying_stratum": "上覆层",
-              "rock_combination": "岩石组合概括"
+              "rock_combination": "岩石组合概括",
+              "confidence": 0.95
             }
           ]
         }
@@ -185,8 +195,8 @@ class TextInfoAgent:
 
             return chunk_strata, chunk_profiles
 
-        # 启动并发线程加速抽取 (max_workers=3 是平衡频控与速度的最佳点)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        # 启动并发线程加速抽取 (max_workers=5 提升大规模文本处理速度)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             futures = [executor.submit(_process_single_chunk, (i, chunk)) for i, chunk in enumerate(chunks)]
             for future in concurrent.futures.as_completed(futures):
                 s_res, p_res = future.result()

@@ -1,9 +1,7 @@
 import os
 import time
 import hashlib
-import cv2
 import numpy as np
-import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 import html
@@ -11,37 +9,59 @@ import inspect
 from PIL import Image
 from dotenv import load_dotenv
 
-# === 🚀 核心修复：解除 PIL 库对超大分辨率地质图的“像素炸弹”防爆限制 ===
+# === 🚀 核心修复：解除 PIL 库对超大分辨率地质图的"像素炸弹"防爆限制 ===
 Image.MAX_IMAGE_PIXELS = None
 
 os.environ["FOR_DISABLE_CONSOLE_CTRL_HANDLER"] = "1"
 
-try:
-    from master_agent import MasterAgent
-except ImportError:
-    MasterAgent = None
+# === Lazy imports for heavy modules (loaded only when needed) ===
+_MasterAgent = None
+_DBManager = None
+_cv2 = None
+_pandas = None
 
-try:
-    from db_manager import DBManager
-except ImportError:
-    class DBManager:
-        def check_connection(self): return True
+def _get_MasterAgent():
+    global _MasterAgent
+    if _MasterAgent is None:
+        from master_agent import MasterAgent as MA
+        _MasterAgent = MA
+    return _MasterAgent
 
-        def create_session(self, title="新对话"): return 1
+def _get_DBManager():
+    global _DBManager
+    if _DBManager is None:
+        try:
+            from db_manager import DBManager as DB
+            _DBManager = DB
+        except ImportError:
+            class _FakeDB:
+                def check_connection(self): return True
+                def create_session(self, title="新对话"): return 1
+                def get_all_sessions(self): return [{'id': 1, 'title': '默认会话'}]
+                def get_history(self, sid): return []
+                def add_message(self, sid, role, content, decision=None, result_state=None, file_path=None,
+                                file_type=None): pass
+                def delete_session(self, sid): pass
+                def update_session_title(self, sid, title): pass
+                def delete_empty_sessions(self, exclude_session_id=None): pass
+            _DBManager = _FakeDB
+    return _DBManager
 
-        def get_all_sessions(self): return [{'id': 1, 'title': '默认会话'}]
+def _get_cv2():
+    global _cv2
+    if _cv2 is None:
+        import cv2
+        _cv2 = cv2
+    return _cv2
 
-        def get_history(self, sid): return []
+def _get_pandas():
+    global _pandas
+    if _pandas is None:
+        import pandas as pd
+        _pandas = pd
+    return _pandas
 
-        def add_message(self, sid, role, content, decision=None, result_state=None, file_path=None,
-                        file_type=None): pass
-
-        def delete_session(self, sid): pass
-
-        def update_session_title(self, sid, title): pass
-
-        def delete_empty_sessions(self, exclude_session_id=None): pass
-
+# === 启动流程 ===
 try:
     from streamlit_image_coordinates import streamlit_image_coordinates
 
@@ -59,7 +79,8 @@ ENV_API_KEY = os.getenv("DASHSCOPE_API_KEY")
 st.set_page_config(page_title="基于多智能体的三维地质建模钻孔数据生成", page_icon="🌍", layout="wide", initial_sidebar_state="expanded")
 
 try:
-    db = DBManager()
+    DB = _get_DBManager()
+    db = DB()
     if not db.check_connection(): st.error("⚠️ 数据库连接失败。"); st.stop()
 except Exception:
     st.error("数据库初始化错误");
@@ -120,6 +141,7 @@ def safe_get(obj, key):
 
 def highlight_contour_on_image(image_path, contour, color=(0, 0, 255), thickness=5):
     if not os.path.exists(image_path): return None
+    cv2 = _get_cv2()
     img_bgr = cv2.imdecode(np.fromfile(image_path, dtype=np.uint8), cv2.IMREAD_COLOR)
     if img_bgr is None: return None
     pts = np.array(contour, dtype=np.int32)
@@ -579,6 +601,7 @@ def render_analysis_result(decision, result_state, image_path=None, msg_id=None)
         total_rows = final_boreholes.get("total_rows", len(bh_data))
 
         if status == "Success" and bh_data:
+            pd = _get_pandas()
             df_show = pd.DataFrame(bh_data)
             st.success(
                 f"✅ 钻孔采样完毕，总计生成 {total_rows} 行标准格式数据！*(下方表格仅展示前 {len(df_show)} 行预览)*")
@@ -693,7 +716,8 @@ with st.sidebar:
         if st.session_state.master_agent is None or st.session_state.current_model != selected_model:
             st.session_state.current_model = selected_model
             try:
-                st.session_state.master_agent = MasterAgent(api_key=ENV_API_KEY, model_name=selected_model)
+                MA = _get_MasterAgent()
+                st.session_state.master_agent = MA(api_key=ENV_API_KEY, model_name=selected_model)
                 st.toast(f"计算引擎已成功切换至: {selected_model}", icon="🔄")
             except Exception as e:
                 st.error(f"引擎初始化失败: {e}")
@@ -805,6 +829,58 @@ for msg in msgs:
                             img_p = p;
                             break
                 render_analysis_result(msg["decision"], msg["result_state"], image_path=img_p, msg_id=msg.get("id"))
+            # Monitoring panel
+            if msg.get("result_state"):
+                rs = msg["result_state"]
+                has_monitoring = any(k in rs for k in ["node_statuses", "overall_confidence", "conflicts_detected", "backtrack_history"])
+                if has_monitoring:
+                    with st.expander("📈 执行监控面板", expanded=False):
+                        # Node timing
+                        node_statuses = rs.get("node_statuses", {})
+                        if node_statuses:
+                            st.caption("**节点耗时**")
+                            for name, ns in node_statuses.items():
+                                dur = ns.get("duration_ms", 0)
+                                status = ns.get("status", "?")
+                                icon = "✅" if status == "success" else "❌" if status == "failed" else "⏳"
+                                st.text(f"{icon} {name}: {dur:.0f}ms ({status})")
+
+                        # Confidence scores
+                        conf_cols = st.columns(4)
+                        conf_fields = [
+                            ("文本置信度", "text_extraction_confidence"),
+                            ("图例置信度", "image_extraction_confidence"),
+                            ("融合置信度", "fusion_confidence"),
+                            ("综合置信度", "overall_confidence"),
+                        ]
+                        for i, (label, key) in enumerate(conf_fields):
+                            val = rs.get(key, None)
+                            if val is not None:
+                                color = "green" if val >= 0.7 else "orange" if val >= 0.4 else "red"
+                                conf_cols[i].metric(label, f"{val:.2f}")
+
+                        # Task routing log
+                        routings = rs.get("task_routing_log", [])
+                        if routings:
+                            st.caption(f"**🧭 模型调度决策 ({len(routings)} 项)**")
+                            for r in routings:
+                                st.text(f"  {r.get('task', '?')} → {r.get('selected_model', '?')} ({r.get('reason', '?')})")
+
+                        # Conflicts
+                        conflicts = rs.get("conflicts_detected", [])
+                        if conflicts:
+                            st.caption(f"**⚠️ 冲突检测 ({len(conflicts)} 项)**")
+                            for c in conflicts:
+                                sev = c.get("severity", "?")
+                                sev_icon = "🔴" if sev == "high" else "🟡" if sev == "medium" else "🟢"
+                                st.text(f"{sev_icon} [{c.get('conflict_type', '?')}] {c.get('description', '?')}")
+
+                        # Backtrack history
+                        bh = rs.get("backtrack_history", [])
+                        if bh:
+                            st.caption(f"**🔄 回溯历史 ({len(bh)} 次)**")
+                            for h in bh:
+                                st.text(h)
 
 # === 🚀 新增：隐形锚点与自动滚动 JS 逻辑 ===
 # 在渲染完所有历史消息后，立即注入一个隐形 DOM，并通知前端瞬间滚动到此位置
@@ -841,7 +917,7 @@ else:
 
 with bottom_ctrl:
     if st.session_state.is_processing:
-        # 1. 任务执行状态：在底层聊天框正上方悬浮一个优雅的“停止生成”按钮
+        # 1. 任务执行状态：在底层聊天框正上方悬浮一个优雅的"停止生成"按钮
         col1, col2, col3 = st.columns([3, 2, 3])
         with col2:
             if st.button("🛑 停止生成", type="secondary", use_container_width=True):
@@ -942,7 +1018,23 @@ if st.session_state.is_processing and st.session_state.pending_prompt:
             render_analysis_result(decision, result, msg_id="current")
             st.markdown(final_resp)
 
-            db.add_message(cur_sid, "assistant", final_resp, decision, result, file_path=curr_file_db,
+            # Store only safe subset of state (MySQL JSON column has size/type limits)
+            import math
+            def _safe_json(obj, depth=0):
+                if depth > 4 or obj is None: return None
+                if isinstance(obj, (str, int, bool)): return obj
+                if isinstance(obj, float):
+                    return None if (math.isnan(obj) or math.isinf(obj)) else round(obj, 6)
+                if hasattr(obj, 'model_dump'): return _safe_json(obj.model_dump(), depth+1)
+                if hasattr(obj, 'dict'): return _safe_json(obj.dict(), depth+1)
+                if isinstance(obj, dict):
+                    return {k: _safe_json(v, depth+1) for k, v in obj.items()
+                            if k not in ('messages','chat_history')}
+                if isinstance(obj, list):
+                    return [_safe_json(v, depth+1) for v in obj[:50]]
+                return str(obj)[:200]
+            safe_result = _safe_json(result) or {}
+            db.add_message(cur_sid, "assistant", final_resp, decision, safe_result, file_path=curr_file_db,
                            file_type=curr_type_db)
             st.session_state.uploader_key += 1
 

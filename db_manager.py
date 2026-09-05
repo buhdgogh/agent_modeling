@@ -135,17 +135,19 @@ class DBManager:
 
         json_state = None
         if result_state:
+            import math
             def pydantic_encoder(obj):
                 if hasattr(obj, "model_dump"): return obj.model_dump()
                 if hasattr(obj, "dict"): return obj.dict()
+                if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)): return None
                 return str(obj)
 
             try:
-                # 重新加入 final_kg 字段用于后台数据持久化记录，但不在前端渲染
                 keys_to_keep = ['final_text_info', 'final_kg', 'final_image_analysis', 'final_boreholes', 'thought_log']
                 filtered = {k: v for k, v in result_state.items() if k in keys_to_keep and v is not None}
                 if filtered:
-                    json_state = json.dumps(filtered, default=pydantic_encoder, ensure_ascii=False)
+                    json_state = json.dumps(filtered, default=pydantic_encoder, ensure_ascii=False,
+                                           allow_nan=False)
             except Exception as e:
                 print(f"[Serialization Error] {e}")
 

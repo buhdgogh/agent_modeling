@@ -1,0 +1,41 @@
+# Python cache and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local credentials (keep the documented template)
+api_key.env
+!.api_key.env.example
+
+# IDE and operating-system metadata
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime and generated outputs
+temp/
+output/
+experiments/output/
+*.log
+
+# Thesis/report figure-generation helpers (not part of the application)
+/generate_*.py
+/regenerate_all_figures.py
+/run_validation_figures.py
+/experiments/experiment/
+/experiments/insert_images.py
+/experiments/update_thesis.py
+/experiments/modeling/generate_sections.py
+
+# Training checkpoints; runtime uses best.pt
+PEACE/models/**/last.pt

@@ -81,8 +81,12 @@ class LegendItem(BaseModel):
     hist: Optional[List[float]] = Field(None)
 
     legend_text: str = Field("")
+    formation: str = Field("")         # VLM识别的地层名称
+    lithology: str = Field("")         # VLM识别的岩性描述
+    age_text: str = Field("")          # VLM识别的地质年代文字
     symbol: GeoSymbol = Field(default_factory=GeoSymbol)
     is_recognized: bool = Field(False)
+    legend_text_confidence: float = Field(0.0, ge=0.0, le=1.0, description="VLM识别图例文字的置信度")
 
     color_patch_base64: Optional[str] = Field(None, exclude=True)
     text_patch_base64: Optional[str] = Field(None, exclude=True)
@@ -123,9 +127,9 @@ class RegionItem(BaseModel):
 
 class ImageAnalysisResult(BaseModel):
     summary: str
-    features: List[Dict[str, Any]] = []
-    legends: List[LegendItem] = []
-    regions: List[RegionItem] = []
+    features: List[Dict[str, Any]] = Field(default_factory=list)
+    legends: List[LegendItem] = Field(default_factory=list)
+    regions: List[RegionItem] = Field(default_factory=list)
     annotated_map_base64: Optional[str] = None
     cropped_legend_base64: Optional[str] = None
 
@@ -157,7 +161,9 @@ def safe_parse_json(text: str) -> Optional[dict]:
 
 
 def _ensure_text_fallback(txt):
-    return txt if isinstance(txt, dict) else {"legend_text": "", "confidence": 0.0}
+    if isinstance(txt, dict):
+        return {"legend_text": txt.get("legend_text", ""), "confidence": txt.get("confidence", 0.0)}
+    return {"legend_text": "", "confidence": 0.0}
 
 
 def _ensure_symbol_fallback(sym):
@@ -182,6 +188,32 @@ def convert_for_json(obj):
 
 def bgr_to_rgb(bgr):
     return [int(bgr[2]), int(bgr[1]), int(bgr[0])]
+
+
+def _compute_match_score(legend_rgb, region_rgb, legend_hist=None, region_hist=None) -> float:
+    """Compute a combined match score from color distance and optional texture similarity.
+    Returns score in [0, 1], higher = better match."""
+    # Color score: normalize L1 distance (0-765) to [0,1], invert so closer = higher
+    l1_dist = float(sum(abs(a - b) for a, b in zip(legend_rgb, region_rgb)))
+    color_score = max(0.0, 1.0 - l1_dist / 400.0)  # 400 = ~half max RGB distance
+
+    # Texture score: histogram intersection (Bhattacharyya-like)
+    texture_score = 0.5  # neutral default
+    if legend_hist is not None and region_hist is not None:
+        try:
+            lh = np.array(legend_hist, dtype=np.float64)
+            rh = np.array(region_hist, dtype=np.float64)
+            lh = lh / (lh.sum() + 1e-10)
+            rh = rh / (rh.sum() + 1e-10)
+            # Histogram intersection
+            texture_score = float(np.sum(np.minimum(lh, rh)))
+        except Exception:
+            pass
+
+    # Weighted combination: 70% color, 30% texture (if available)
+    if legend_hist is not None and region_hist is not None:
+        return round(0.7 * color_score + 0.3 * texture_score, 4)
+    return round(color_score, 4)
 
 
 def nonwhite_mask_u8(patch_rgb, white_thresh=245):
@@ -214,6 +246,7 @@ class ImageAgent:
     def __init__(self, api_key: str, model_name: str = "qwen-vl-max"):
         self.model_name = model_name
         self.llm = ChatTongyi(model=model_name, dashscope_api_key=api_key, temperature=0.01)
+        self._yolo_model = None  # lazy-loaded, prevents repeated GitHub checks
 
         self.output_dir = os.path.join(current_dir, "output")
         if not os.path.exists(self.output_dir):
@@ -326,8 +359,18 @@ class ImageAgent:
                     fast_prompt = (
                         "你是一个专业的地质专家。这是一张地质图的图例区域截图。\n"
                         "请严格按照图中图例【从上到下】（代表地层由新到老）的排列顺序，"
-                        "一次性提取出所有的【地层代号/符号】和对应的【地层名称/岩性】。\n"
-                        "请直接以清晰的列表形式输出（如：1. Qp - 更新统），不要遗漏，无需提取颜色与坐标，也不要任何多余废话。"
+                        "逐项提取每个图例的完整信息，以纯JSON数组格式输出。\n\n"
+                        "输出格式要求（严格JSON，不要Markdown标记，不要任何额外文字）:\n"
+                        '[\n'
+                        '  {"index": 1, "formation": "地层名称", "code": "地层代号", "color_desc": "色块颜色描述"},\n'
+                        '  {"index": 2, "formation": "地层名称", "code": "地层代号", "color_desc": "色块颜色描述"}\n'
+                        ']\n\n'
+                        "填写规则:\n"
+                        "- index: 从1开始递增\n"
+                        "- formation: 图例文字中的地层名称或岩性描述\n"
+                        "- code: 图例中的地层代号/符号（如 Q, Pt1, J3 等），如果没有则填 null\n"
+                        "- color_desc: 色块的颜色描述（如'淡黄色''灰绿色''粉紫色'等）\n"
+                        "- 请勿遗漏任何图例项，也勿编造不存在的项"
                     )
 
                     messages = [
@@ -337,11 +380,37 @@ class ImageAgent:
                         ])
                     ]
                     resp = self.llm.invoke(messages)
-                    summary = self._extract_content_str(resp.content)
+                    raw_content = self._extract_content_str(resp.content)
 
+                    # Parse JSON response to build structured LegendItems
+                    fast_legends = []
+                    try:
+                        raw_clean = re.sub(r'```json|```', '', raw_content, flags=re.IGNORECASE).strip()
+                        match = re.search(r'\[[\s\S]*\]', raw_clean)
+                        if match:
+                            parsed = json.loads(match.group())
+                            for item in parsed:
+                                leg = LegendItem(
+                                    id=item.get("index", len(fast_legends)),
+                                    avg_color=[200, 200, 200],  # placeholder, matched later
+                                    legend_text=item.get("formation", ""),
+                                    symbol=GeoSymbol(
+                                        final=item.get("code", "Unknown"),
+                                        terminal=item.get("code", "Unknown"),
+                                        confidence=0.85
+                                    ),
+                                    is_recognized=True,
+                                    legend_text_confidence=0.85,
+                                    color_name=item.get("color_desc", "unknown")
+                                )
+                                fast_legends.append(leg)
+                    except Exception:
+                        pass
+
+                    summary = f"【虚拟钻孔极速图例提取】共识别 {len(fast_legends)} 个图例项（VLM结构化JSON）"
                     return {"analysis": ImageAnalysisResult(
-                        summary=f"【虚拟钻孔极速图例提取】\n{summary}",
-                        legends=[],
+                        summary=summary,
+                        legends=fast_legends,
                         regions=[]
                     )}
             except Exception:
@@ -517,12 +586,13 @@ class ImageAgent:
                         yolo_success = False
                         region_id_counter = 1
 
-                        # === 🚀 局部 BBox 极速提取优化（YOLO 分支） ===
+                                        # === 🚀 YOLO segmentation (lazy-load model once) ===
                         if HAS_YOLO:
                             try:
-                                yolo_model_path = os.getenv("YOLO_SEG_MODEL", "yolov10n-seg.pt")
-                                seg_model = YOLO(yolo_model_path)
-                                yolo_results = seg_model(map_patch, verbose=False)
+                                if not hasattr(self, '_yolo_model'):
+                                    yolo_model_path = os.getenv("YOLO_SEG_MODEL", "yolov10n-seg.pt")
+                                    self._yolo_model = YOLO(yolo_model_path)
+                                yolo_results = self._yolo_model(map_patch, verbose=False)
 
                                 if yolo_results and len(yolo_results) > 0 and yolo_results[0].masks is not None:
                                     masks_xy = yolo_results[0].masks.xy
@@ -557,9 +627,12 @@ class ImageAgent:
 
                                         dists = np.sum(np.abs(legend_colors_rgb - region_rgb), axis=1)
                                         best_idx = np.argmin(dists)
+                                        min_l1 = float(dists[best_idx])
 
                                         leg = extracted_legends[best_idx]
                                         target_bgr = legend_bgr_colors[best_idx]
+                                        match_sc = _compute_match_score(leg.avg_color, region_rgb.tolist(),
+                                                                        leg.hist if leg.hist else None)
 
                                         cv2.drawContours(map_patch_optimized, [cnt], -1, target_bgr.tolist(), -1)
                                         cv2.drawContours(map_patch_reinforced, [cnt], -1, target_bgr.tolist(), -1)
@@ -575,7 +648,7 @@ class ImageAgent:
                                         all_regions_ui.append({
                                             "id": region_id_counter, "contour": contour_list,
                                             "centroid": [cx, cy], "area": float(area),
-                                            "matched_legend_id": leg.id, "match_score": 0.95,
+                                            "matched_legend_id": leg.id, "match_score": match_sc,
                                             "geo": {
                                                 "unit_name": leg.legend_text, "legend_id": leg.id,
                                                 "legend_color_name": leg.color_name, "legend_color_rgb": leg.avg_color
@@ -586,7 +659,7 @@ class ImageAgent:
                                         # === 🚀 恢复完整字段收集 (YOLO 分支) ===
                                         all_region_matches.append({
                                             "region_id": region_id_counter, "matched_legend_id": leg.id,
-                                            "match_score": 0.95,
+                                            "match_score": match_sc,
                                             "symbol_final": leg.symbol.final, "symbol_terminal": leg.symbol.terminal,
                                             "symbol_html": leg.symbol.html, "symbol_latex": leg.symbol.latex,
                                             "symbol_conf": leg.symbol.confidence, "legend_text": leg.legend_text,
@@ -689,10 +762,11 @@ class ImageAgent:
 
                                     contour_list = approx_offset.squeeze().tolist() if approx_offset.ndim == 3 else approx_offset.tolist()
 
+                                    mh_match = _compute_match_score(leg.avg_color, leg.avg_color, leg.hist if leg.hist else None)
                                     all_regions_ui.append({
                                         "id": region_id_counter, "contour": contour_list,
                                         "centroid": [cx, cy], "area": float(area_small / (scale_ratio ** 2)),
-                                        "matched_legend_id": leg.id, "match_score": 0.95,
+                                        "matched_legend_id": leg.id, "match_score": mh_match,
                                         "geo": {
                                             "unit_name": leg.legend_text, "legend_id": leg.id,
                                             "legend_color_name": leg.color_name, "legend_color_rgb": leg.avg_color
@@ -703,7 +777,7 @@ class ImageAgent:
                                     # === 🚀 恢复完整字段收集 (曼哈顿降维分支) ===
                                     all_region_matches.append({
                                         "region_id": region_id_counter, "matched_legend_id": leg.id,
-                                        "match_score": 0.95,
+                                        "match_score": mh_match,
                                         "symbol_final": leg.symbol.final, "symbol_terminal": leg.symbol.terminal,
                                         "symbol_html": leg.symbol.html, "symbol_latex": leg.symbol.latex,
                                         "symbol_conf": leg.symbol.confidence, "legend_text": leg.legend_text,
@@ -796,12 +870,34 @@ class ImageAgent:
 
     def _recognize_single_legend(self, legend: LegendItem):
         if legend.is_recognized: return legend
-        GEOLOGY_PROMPT = "你是一个地质专家。请识别图例色块中的地质符号（包含上下标）。请严格输出纯JSON格式数据：{\"base\": \"\", \"superscript\": \"\", \"subscript\": \"\", \"symbol_final\": \"\", \"symbol_terminal\": \"\", \"confidence\": 0.99}。绝不要输出其他废话。"
-        LEGEND_TEXT_PROMPT = "你是一个地质专家。请识别图例文字说明（即地层名称、岩性等）。请严格输出纯JSON格式数据：{\"legend_text\": \"\", \"confidence\": 0.99}。绝不要输出其他废话。"
+        GEOLOGY_PROMPT = (
+            "你是一个地质专家。请识别图例色块中的地质符号（包含上下标）。\n"
+            "请严格输出纯JSON: "
+            '{"base": "", "superscript": "", "subscript": "", "symbol_final": "", "symbol_terminal": "", "confidence": 0.99}\n'
+            "示例: 符号 Pt₁q → {\"base\":\"Pt\",\"superscript\":\"\",\"subscript\":\"1q\",\"symbol_final\":\"Pt₁q\",\"symbol_terminal\":\"Pt1q\",\"confidence\":0.95}\n"
+            "绝不要输出其他废话。"
+        )
+        LEGEND_TEXT_PROMPT = (
+            "你是一个地质专家。请识别图例文字说明，提取地层名称、岩性、年代信息。\n"
+            "请严格输出纯JSON: "
+            '{"formation": "地层名称", "lithology": "岩性描述", "age_text": "地质年代", "confidence": 0.99}\n'
+            "示例: 文字 '堑头岩组 变粒岩、片麻岩 Pt₁' → "
+            '{"formation":"堑头岩组","lithology":"变粒岩、片麻岩","age_text":"古元古代","confidence":0.95}\n'
+            "如果没有某项信息，对应字段填 null。绝不要输出其他废话。"
+        )
 
         if legend.text_patch_base64:
             txt_res = self._call_vlm(legend.text_patch_base64, LEGEND_TEXT_PROMPT)
-            legend.legend_text = _ensure_text_fallback(txt_res).get("legend_text", "识别失败")
+            if isinstance(txt_res, dict):
+                legend.legend_text = txt_res.get("formation", txt_res.get("legend_text", "识别失败"))
+                legend.formation = txt_res.get("formation", txt_res.get("legend_text", ""))
+                legend.lithology = txt_res.get("lithology", "")
+                legend.age_text = txt_res.get("age_text", "")
+                legend.legend_text_confidence = float(txt_res.get("confidence", 0.0))
+            else:
+                txt_dict = _ensure_text_fallback(txt_res)
+                legend.legend_text = txt_dict.get("legend_text", "识别失败")
+                legend.legend_text_confidence = float(txt_dict.get("confidence", 0.0))
 
         if legend.color_patch_base64:
             sym_res = self._call_vlm(legend.color_patch_base64, GEOLOGY_PROMPT)
