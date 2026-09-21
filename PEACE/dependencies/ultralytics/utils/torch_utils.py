@@ -60,11 +60,14 @@ def smart_inference_mode():
 
 def get_cpu_info():
     """Return a string with system CPU information, i.e. 'Apple M2'."""
-    import cpuinfo  # pip install py-cpuinfo
-
-    k = "brand_raw", "hardware_raw", "arch_string_raw"  # info keys sorted by preference (not all keys always available)
-    info = cpuinfo.get_cpu_info()  # info dict
-    string = info.get(k[0] if k[0] in info else k[1] if k[1] in info else k[2], "unknown")
+    # CPU metadata is only for logging; an unavailable architecture string must
+    # not prevent otherwise working PyTorch CPU inference.
+    try:
+        import cpuinfo  # pip install py-cpuinfo
+        info = cpuinfo.get_cpu_info()
+        string = next((info[key] for key in ("brand_raw", "hardware_raw", "arch_string_raw") if info.get(key)), "unknown")
+    except Exception:
+        string = "unknown"
     return string.replace("(R)", "").replace("CPU ", "").replace("@ ", "")
 
 

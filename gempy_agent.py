@@ -2,10 +2,13 @@ import os
 import time
 import math
 import json
+import logging
 import numpy as np
 import pandas as pd
-import traceback
 import warnings
+from app_errors import GeospatialError, public_error_message, error_code
+
+logger = logging.getLogger(__name__)
 
 # === 屏蔽底层警告 ===
 warnings.filterwarnings("ignore")
@@ -53,7 +56,7 @@ class GempyAgent:
         if not os.path.exists(self.temp_dir):
             os.makedirs(self.temp_dir)
 
-    def run(self, text: str, file_paths: str = ""):
+    def run(self, text: str, file_paths: str = "", output_dir: str = ""):
         result_dict = {
             "status": "Started",
             "virtual_boreholes_data": [],
@@ -182,6 +185,7 @@ class GempyAgent:
                                 legend_id = r.get('matched_legend_id', -1)
                                 region_shapes.append((poly, legend_id))
                         except Exception:
+                            logger.debug("Invalid map contour ignored: region_id=%s", r.get('id'), exc_info=True)
                             continue
 
                     if region_shapes:
@@ -193,8 +197,8 @@ class GempyAgent:
                         n_matched = np.sum(surface_formation >= 0)
                         print(f">>> [BoreholeAgent] Region constraint: {len(region_shapes)} polygons, "
                               f"{n_matched}/{n_cells} cells ({100*n_matched/max(n_cells,1):.0f}%) constrained")
-                except Exception as e:
-                    print(f">>> [BoreholeAgent] Region load failed: {str(e)[:80]}, using uniform stack")
+                except Exception:
+                    logger.warning("Region constraints could not be loaded; using uniform stack", exc_info=True)
 
             # Build legend_id → formation_code lookup (bucketed by Y-rank)
             legend_to_fc = {}
@@ -214,8 +218,8 @@ class GempyAgent:
                             legend_to_fc[leg['id']] = fc
                         print(f">>> [BoreholeAgent] Region constraint: {len(legend_to_fc)} legend IDs "
                               f"mapped to {num_fms} formation codes (Y-rank bucketing)")
-                    except Exception as e:
-                        print(f">>> [BoreholeAgent] legend_info load failed: {str(e)[:80]}")
+                    except Exception:
+                        logger.warning("Legend metadata could not be loaded", exc_info=True)
 
             # ==========================================
             # Step 3b: UTM coordinate transform (vectorized)
@@ -244,7 +248,8 @@ class GempyAgent:
                         tv = float(r.get('厚度', 30))
                         if pd.isna(tv) or tv <= 0:
                             tv = 30.0
-                    except Exception:
+                    except (TypeError, ValueError):
+                        logger.debug("Invalid thickness value replaced with default: %r", r.get('厚度'))
                         tv = 30.0
                     fc = str(r['formation_code']) if pd.notna(r.get('formation_code')) else 'Unknown'
                     layers.append((fc, tv))
@@ -313,7 +318,8 @@ class GempyAgent:
                         try:
                             if int(fc) == target_fc:
                                 start_j = j; break
-                        except: pass
+                        except (TypeError, ValueError):
+                            logger.debug("Ignored non-numeric formation code: %r", fc)
 
                 for j, (fc, base_t) in enumerate(layers):
                     if j < start_j:
@@ -356,7 +362,9 @@ class GempyAgent:
                 target_cols = ['x', 'y', 'z', 'formation_code', 'value', 'surface', 'borehole_id']
                 df_bh = stacked_df[target_cols]
 
-                bh_csv_path = os.path.join(self.temp_dir, "virtual_boreholes_points.csv")
+                result_dir = output_dir or self.temp_dir
+                os.makedirs(result_dir, exist_ok=True)
+                bh_csv_path = os.path.join(result_dir, "virtual_boreholes_points.csv")
                 df_bh.to_csv(bh_csv_path, index=False, encoding='utf-8-sig')
 
                 # Fast preview: use .values conversion instead of row-by-row
@@ -371,6 +379,9 @@ class GempyAgent:
                 result_dict["status"] = "未能提取到数据，请检查特征边界与区域匹配。"
 
         except Exception as e:
-            result_dict["status"] = f"提取崩溃: {traceback.format_exc()}"
+            wrapped = GeospatialError("Virtual borehole generation failed", details=str(e))
+            logger.exception("Virtual borehole generation failed")
+            result_dict["status"] = public_error_message(wrapped)
+            result_dict["error_code"] = error_code(wrapped)
 
         return {"borehole_result": result_dict}

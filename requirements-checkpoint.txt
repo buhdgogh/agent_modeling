@@ -1,0 +1,2 @@
+# Persistent LangGraph checkpoint backend for the local Streamlit deployment.
+langgraph-checkpoint-sqlite==3.1.1

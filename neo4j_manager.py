@@ -1,7 +1,11 @@
 import os
+import logging
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
 from typing import List, Dict, Any
+from app_errors import DatabaseError
+
+logger = logging.getLogger(__name__)
 
 # 加载配置
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,8 +25,8 @@ class Neo4jManager:
             # 验证连接
             self.driver.verify_connectivity()
             print(">>> [Neo4j] 连接成功！")
-        except Exception as e:
-            print(f">>> [Neo4j] 连接失败: {e}")
+        except Exception:
+            logger.exception("Neo4j connection failed: uri=%s user=%s", self.uri, self.user)
             self.driver = None
 
     def close(self):
@@ -43,6 +47,7 @@ class Neo4jManager:
             return
 
         with self.driver.session() as session:
+            failures = []
             # 1. 批量创建节点
             for node in nodes:
                 # 使用 MERGE 避免重复创建 (基于 id)
@@ -57,8 +62,9 @@ class Neo4jManager:
                 """
                 try:
                     session.run(cypher, name=node.id, desc=props)
-                except Exception as e:
-                    print(f"Node Error: {e}")
+                except Exception as exc:
+                    logger.exception("Neo4j node write failed: node=%s", node.id)
+                    failures.append(("node", node.id, str(exc)))
 
             # 2. 批量创建关系
             for edge in edges:
@@ -76,8 +82,17 @@ class Neo4jManager:
                 """
                 try:
                     session.run(cypher, source=edge.source, target=edge.target, desc=desc)
-                except Exception as e:
-                    print(f"Edge Error: {e}")
+                except Exception as exc:
+                    logger.exception(
+                        "Neo4j edge write failed: source=%s target=%s", edge.source, edge.target
+                    )
+                    failures.append(("edge", f"{edge.source}->{edge.target}", str(exc)))
+
+            if failures:
+                raise DatabaseError(
+                    "One or more Neo4j graph writes failed",
+                    details={"failure_count": len(failures), "failures": failures},
+                )
 
             print(f">>> [Neo4j] 数据写入完成: {len(nodes)} Nodes, {len(edges)} Edges.")
 

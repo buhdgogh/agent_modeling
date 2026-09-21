@@ -4,6 +4,7 @@ import io
 import base64
 import re
 import json
+import logging
 import networkx as nx
 import matplotlib
 
@@ -20,6 +21,8 @@ from langchain_community.chat_models import ChatTongyi
 from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END
 import concurrent.futures  # === 🚀 新增：导入多线程支持 ===
+
+logger = logging.getLogger(__name__)
 
 try:
     from neo4j_manager import Neo4jManager
@@ -102,8 +105,8 @@ class KGBuilderAgent:
             plt.savefig(buf, format='png', bbox_inches='tight', dpi=150)
             plt.close()
             return base64.b64encode(buf.getvalue()).decode('utf-8')
-        except Exception as e:
-            print(f">>> [KGBuilderAgent] 生成静态图失败: {e}")
+        except Exception:
+            logger.exception("Knowledge graph preview generation failed")
             return None
 
     def _extraction_node(self, state: AgentState):
@@ -186,8 +189,11 @@ class KGBuilderAgent:
                         else:
                             raise ValueError("JSON not found.")
 
-                except Exception as e:
-                    print(f"    片段 {i + 1} 失败 (尝试 {attempt + 1}): {str(e)[:50]}")
+                except Exception:
+                    logger.warning(
+                        "Knowledge graph extraction failed for chunk %s on attempt %s/3",
+                        i + 1, attempt + 1, exc_info=True
+                    )
                     time.sleep(2)
 
             return chunk_nodes, chunk_edges
@@ -212,8 +218,8 @@ class KGBuilderAgent:
                     neo4j_mgr.save_graph_data(unique_nodes, all_edges)
                     print(">>> [KGBuilderAgent] Neo4j 同步成功。")
                     neo4j_mgr.close()
-            except Exception as e:
-                print(f">>> [KGBuilderAgent] Neo4j 操作异常: {e}")
+            except Exception:
+                logger.exception("Neo4j synchronization failed; retaining in-memory graph result")
 
         print(">>> [KGBuilderAgent] 生成静态截面图用于前端展示...")
         kg_image = self._generate_static_graph(unique_nodes, all_edges)

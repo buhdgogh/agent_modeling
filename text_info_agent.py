@@ -3,12 +3,15 @@ import re
 import json
 import time
 import concurrent.futures
+import logging
 from typing import List, Optional, TypedDict, Any
 from pydantic import BaseModel, Field
 
 from langchain_community.chat_models import ChatTongyi
 from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END
+
+logger = logging.getLogger(__name__)
 
 try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -184,14 +187,15 @@ class TextInfoAgent:
                         else:
                             raise ValueError("JSON not found in response.")
 
-                except Exception as e:
-                    err_msg = str(e)
-                    if len(err_msg) > 100: err_msg = err_msg[:100] + "...(解析失败)"
-                    print(f"    - 片段 {i + 1} 第 {attempt + 1} 次解析异常: {err_msg}")
+                except Exception:
+                    logger.warning(
+                        "Text extraction failed for chunk %s on attempt %s/%s",
+                        i + 1, attempt + 1, max_retries, exc_info=True
+                    )
                     if attempt < max_retries - 1:
                         time.sleep(2)
                     else:
-                        print(f"    - 片段 {i + 1} 连续失败，跳过。")
+                        logger.error("Text extraction skipped chunk %s after retries", i + 1)
 
             return chunk_strata, chunk_profiles
 

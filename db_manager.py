@@ -1,8 +1,11 @@
 import mysql.connector
 import os
 import json
+import logging
 from dotenv import load_dotenv
 from typing import List, Dict, Any
+
+logger = logging.getLogger(__name__)
 
 # 强制使用绝对路径加载 .env
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +31,7 @@ class DBManager:
         try:
             return mysql.connector.connect(**self.config)
         except mysql.connector.Error as err:
-            print(f"[DB Error] {err}")
+            logger.exception("MySQL connection failed")
             return None
 
     def check_connection(self) -> bool:
@@ -38,7 +41,8 @@ class DBManager:
                 conn.close()
                 return True
             return False
-        except:
+        except Exception:
+            logger.exception("MySQL connection health check failed")
             return False
 
     # === 会话管理 ===
@@ -87,6 +91,29 @@ class DBManager:
             cursor.close()
             conn.close()
 
+    def clear_session_history(self, session_id: int, reset_title: bool = True) -> bool:
+        """Delete all persisted messages for a session while keeping the session itself."""
+        conn = self.get_connection()
+        if not conn:
+            return False
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM chat_history WHERE session_id = %s", (session_id,))
+            if reset_title:
+                cursor.execute(
+                    "UPDATE sessions SET title = %s WHERE id = %s",
+                    ("新对话", session_id)
+                )
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            logger.exception("Failed to clear session history: session_id=%s", session_id)
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
     # === 一键清理闲置的空对话 ===
     def delete_empty_sessions(self, exclude_session_id: int = None):
         """静默删除所有没有任何聊天记录的会话，跳过用户当前正在选中的会话"""
@@ -109,7 +136,7 @@ class DBManager:
                 cursor.execute(query)
             conn.commit()
         except Exception as e:
-            print(f"[Delete Empty Sessions Error] {e}")
+            logger.exception("Failed to delete empty sessions")
         finally:
             cursor.close()
             conn.close()
@@ -143,13 +170,18 @@ class DBManager:
                 return str(obj)
 
             try:
-                keys_to_keep = ['final_text_info', 'final_kg', 'final_image_analysis', 'final_boreholes', 'thought_log']
+                keys_to_keep = [
+                    'final_text_info', 'final_kg', 'final_image_analysis', 'final_boreholes',
+                    'thought_log', 'node_statuses', 'task_routing_log', 'errors',
+                    'overall_confidence', 'text_extraction_confidence',
+                    'image_extraction_confidence', 'fusion_confidence'
+                ]
                 filtered = {k: v for k, v in result_state.items() if k in keys_to_keep and v is not None}
                 if filtered:
                     json_state = json.dumps(filtered, default=pydantic_encoder, ensure_ascii=False,
                                            allow_nan=False)
             except Exception as e:
-                print(f"[Serialization Error] {e}")
+                logger.exception("Failed to serialize message result state")
 
         try:
             query = """
@@ -160,7 +192,7 @@ class DBManager:
             cursor.execute(query, (session_id, role, content, decision, json_state, file_path, file_type))
             conn.commit()
         except Exception as e:
-            print(f"[Add Message Error] {e}")
+            logger.exception("Failed to persist chat message: session_id=%s role=%s", session_id, role)
         finally:
             cursor.close()
             conn.close()
@@ -178,8 +210,8 @@ class DBManager:
                 if row['result_state']:
                     try:
                         res_state = json.loads(row['result_state'])
-                    except:
-                        pass
+                    except (TypeError, ValueError, json.JSONDecodeError):
+                        logger.warning("Ignored invalid result_state JSON for message_id=%s", row['id'])
 
                 history.append({
                     "id": row['id'],

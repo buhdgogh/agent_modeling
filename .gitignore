@@ -25,17 +25,32 @@ Thumbs.db
 # Runtime and generated outputs
 temp/
 output/
+runtime/
+run/
+runs/
+PEACE/output/
 experiments/output/
 *.log
 
-# Thesis/report figure-generation helpers (not part of the application)
-/generate_*.py
-/regenerate_all_figures.py
-/run_validation_figures.py
-/experiments/experiment/
-/experiments/insert_images.py
-/experiments/update_thesis.py
-/experiments/modeling/generate_sections.py
+# Source-only repository: local experiments, papers, figures and datasets
+/experiments/
+/work/
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.csv
+*.docx
+*.pdf
 
-# Training checkpoints; runtime uses best.pt
-PEACE/models/**/last.pt
+# Local model artifacts and machine-specific settings
+*.pt
+/yolov10/
+/PEACE/yolov10/
+/PEACE/images/
+/PEACE/dependencies/knowledge/
+
+# Local configuration; keep only the sanitized template
+*.env
+!.api_key.env.example

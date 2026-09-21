@@ -5,13 +5,18 @@ import json
 import re
 import time
 import csv
+import logging
+import math
 import numpy as np
 import cv2
 from typing import List, Optional, TypedDict, Dict, Any, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from langchain_core.messages import HumanMessage
 from langchain_community.chat_models import ChatTongyi
 from langgraph.graph import StateGraph, START, END
+from app_errors import FileValidationError, ModelInvocationError, error_code, public_error_message
+
+logger = logging.getLogger(__name__)
 
 # === 1. 依赖库导入与环境配置 (双轨制与 YOLO 前置探针) ===
 
@@ -25,7 +30,8 @@ try:
     from shapely.geometry import Polygon
 
     HAS_CV_LIBS = True
-except Exception as e:
+except Exception:
+    logger.warning("Optional image-processing dependencies are unavailable", exc_info=True)
     HAS_CV_LIBS = False
 
 try:
@@ -33,14 +39,16 @@ try:
     from PEACE.tool_pool.map_component_detector import map_component_detector
 
     HAS_PEACE = True
-except Exception as e:
+except Exception:
+    logger.warning("PEACE map detectors are unavailable", exc_info=True)
     HAS_PEACE = False
 
 try:
     from ultralytics import YOLO
 
     HAS_YOLO = True
-except ImportError as e:
+except Exception:
+    logger.warning("Ultralytics YOLO is unavailable; color-based fallback will be used", exc_info=True)
     HAS_YOLO = False
 
 # ==========================================
@@ -127,16 +135,19 @@ class RegionItem(BaseModel):
 
 class ImageAnalysisResult(BaseModel):
     summary: str
+    error_code: Optional[str] = None
     features: List[Dict[str, Any]] = Field(default_factory=list)
     legends: List[LegendItem] = Field(default_factory=list)
     regions: List[RegionItem] = Field(default_factory=list)
     annotated_map_base64: Optional[str] = None
     cropped_legend_base64: Optional[str] = None
+    artifacts_dir: Optional[str] = None
 
 
 class AgentState(TypedDict):
     image_path: str
     instruction: str
+    output_dir: str
     analysis: Optional[ImageAnalysisResult]
 
 
@@ -149,25 +160,54 @@ def safe_parse_json(text: str) -> Optional[dict]:
     text = re.sub(r"```json|```", "", text, flags=re.IGNORECASE).strip()
     try:
         return json.loads(text)
-    except:
-        pass
+    except (json.JSONDecodeError, TypeError):
+        logger.debug("VLM response is not a complete JSON document")
     match = re.search(r"\{[\s\S]*\}", text)
     if match:
         try:
             return json.loads(match.group())
-        except:
-            pass
+        except (json.JSONDecodeError, TypeError):
+            logger.debug("Unable to recover JSON object from VLM response")
     return None
+
+
+def _safe_text(value, default=""):
+    return default if value is None else str(value)
+
+
+def _safe_confidence(value):
+    if isinstance(value, bool):
+        return 0.0
+    try:
+        score = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return 0.0
+    return min(1.0, max(0.0, score)) if math.isfinite(score) else 0.0
 
 
 def _ensure_text_fallback(txt):
     if isinstance(txt, dict):
-        return {"legend_text": txt.get("legend_text", ""), "confidence": txt.get("confidence", 0.0)}
+        return {"legend_text": _safe_text(txt.get("legend_text")),
+                "confidence": _safe_confidence(txt.get("confidence"))}
     return {"legend_text": "", "confidence": 0.0}
 
 
 def _ensure_symbol_fallback(sym):
-    if isinstance(sym, dict): return sym
+    if isinstance(sym, dict):
+        normalized = dict(sym)
+        for name in ("final", "terminal", "latex", "symbol_final", "symbol_terminal", "symbol_latex"):
+            if name in normalized:
+                normalized[name] = _safe_text(normalized[name], "Unknown")
+        for name in ("html", "symbol_html"):
+            if name in normalized:
+                normalized[name] = _safe_text(normalized[name])
+        for name in ("confidence", "symbol_conf"):
+            if name in normalized:
+                normalized[name] = _safe_confidence(normalized[name])
+        for name in ("base", "superscript", "subscript"):
+            if normalized.get(name) is not None:
+                normalized[name] = _safe_text(normalized[name])
+        return normalized
     return {"final": "Unknown", "confidence": 0.0, "base": None, "superscript": None, "subscript": None,
             "terminal": "Unknown", "html": "", "latex": "Unknown"}
 
@@ -208,7 +248,7 @@ def _compute_match_score(legend_rgb, region_rgb, legend_hist=None, region_hist=N
             # Histogram intersection
             texture_score = float(np.sum(np.minimum(lh, rh)))
         except Exception:
-            pass
+            logger.debug("Texture similarity calculation failed; using color score only", exc_info=True)
 
     # Weighted combination: 70% color, 30% texture (if available)
     if legend_hist is not None and region_hist is not None:
@@ -279,6 +319,7 @@ class ImageAgent:
             img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
             return self._resize_and_compress(img_bgr)
         except Exception:
+            logger.warning("Unable to encode in-memory image", exc_info=True)
             return ""
 
     def _file_to_base64(self, path):
@@ -287,11 +328,12 @@ class ImageAgent:
             if img_bgr is not None:
                 return self._resize_and_compress(img_bgr)
         except Exception:
-            pass
+            logger.debug("OpenCV could not decode image; trying raw file encoding", exc_info=True)
         try:
             with open(path, "rb") as f:
                 return base64.b64encode(f.read()).decode("utf-8")
         except Exception:
+            logger.exception("Unable to read image file: %s", path)
             return ""
 
     def _extract_content_str(self, content_obj: Any) -> str:
@@ -325,14 +367,21 @@ class ImageAgent:
             content_str = self._extract_content_str(resp.content)
             return safe_parse_json(content_str) or {}
         except Exception:
+            logger.exception("Vision-language model invocation or response parsing failed")
             return {}
 
     def _analyze_node(self, state: AgentState):
         image_path = state["image_path"]
         instruction = state["instruction"]
+        output_root = state.get("output_dir") or self.output_dir
+        os.makedirs(output_root, exist_ok=True)
 
         if not image_path or not os.path.exists(image_path):
-            return {"analysis": ImageAnalysisResult(summary="未找到图片文件", legends=[])}
+            wrapped = FileValidationError("Image file does not exist", details=str(image_path))
+            logger.warning("Image file does not exist: %s", image_path)
+            return {"analysis": ImageAnalysisResult(
+                summary=public_error_message(wrapped), error_code=error_code(wrapped), legends=[]
+            )}
 
         filename = os.path.basename(image_path)
         print(f">>> [ImageAgent] 图例理解与区域分割智能体启动，解析文件: {filename}")
@@ -362,21 +411,22 @@ class ImageAgent:
                         "逐项提取每个图例的完整信息，以纯JSON数组格式输出。\n\n"
                         "输出格式要求（严格JSON，不要Markdown标记，不要任何额外文字）:\n"
                         '[\n'
-                        '  {"index": 1, "formation": "地层名称", "code": "地层代号", "color_desc": "色块颜色描述"},\n'
-                        '  {"index": 2, "formation": "地层名称", "code": "地层代号", "color_desc": "色块颜色描述"}\n'
+                        '  {"index": 1, "formation": "地层名称", "code": "地层代号", "color_desc": "色块颜色描述", "confidence": 0.95},\n'
+                        '  {"index": 2, "formation": "地层名称", "code": "地层代号", "color_desc": "色块颜色描述", "confidence": 0.90}\n'
                         ']\n\n'
                         "填写规则:\n"
                         "- index: 从1开始递增\n"
                         "- formation: 图例文字中的地层名称或岩性描述\n"
                         "- code: 图例中的地层代号/符号（如 Q, Pt1, J3 等），如果没有则填 null\n"
                         "- color_desc: 色块的颜色描述（如'淡黄色''灰绿色''粉紫色'等）\n"
+                        "- confidence: 当前图例文字与代号识别的证据置信度，取值0.0到1.0\n"
                         "- 请勿遗漏任何图例项，也勿编造不存在的项"
                     )
 
                     messages = [
                         HumanMessage(content=[
                             {"type": "text", "text": fast_prompt},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64_str}"}}
+                            {"type": "image", "image": f"data:image/jpeg;base64,{b64_str}"}
                         ])
                     ]
                     resp = self.llm.invoke(messages)
@@ -390,22 +440,23 @@ class ImageAgent:
                         if match:
                             parsed = json.loads(match.group())
                             for item in parsed:
+                                confidence = _safe_confidence(item.get("confidence"))
                                 leg = LegendItem(
                                     id=item.get("index", len(fast_legends)),
                                     avg_color=[200, 200, 200],  # placeholder, matched later
-                                    legend_text=item.get("formation", ""),
+                                    legend_text=_safe_text(item.get("formation")),
                                     symbol=GeoSymbol(
-                                        final=item.get("code", "Unknown"),
-                                        terminal=item.get("code", "Unknown"),
-                                        confidence=0.85
+                                        final=_safe_text(item.get("code"), "Unknown"),
+                                        terminal=_safe_text(item.get("code"), "Unknown"),
+                                        confidence=confidence
                                     ),
                                     is_recognized=True,
-                                    legend_text_confidence=0.85,
-                                    color_name=item.get("color_desc", "unknown")
+                                    legend_text_confidence=confidence,
+                                    color_name=_safe_text(item.get("color_desc"), "unknown")
                                 )
                                 fast_legends.append(leg)
-                    except Exception:
-                        pass
+                    except (json.JSONDecodeError, TypeError, ValueError):
+                        logger.warning("Fast legend response could not be parsed", exc_info=True)
 
                     summary = f"【虚拟钻孔极速图例提取】共识别 {len(fast_legends)} 个图例项（VLM结构化JSON）"
                     return {"analysis": ImageAnalysisResult(
@@ -414,7 +465,7 @@ class ImageAgent:
                         regions=[]
                     )}
             except Exception:
-                pass
+                logger.warning("Fast legend pipeline failed; switching to full analysis", exc_info=True)
 
         if not (HAS_CV_LIBS and HAS_PEACE):
             return self._simple_analysis(image_path, instruction)
@@ -429,15 +480,15 @@ class ImageAgent:
 
             annotated_map_b64 = None
             cropped_legend_b64 = None
-            run_dir = self.output_dir
-            folder_name = "output"
+            run_dir = output_root
+            folder_name = os.path.basename(output_root)
 
             if legend_regions:
                 timestamp_str = str(int(time.time()))
                 base_name = os.path.splitext(os.path.basename(image_path))[0]
                 folder_name = f"{base_name}_{timestamp_str}"
 
-                run_dir = os.path.join(self.output_dir, folder_name)
+                run_dir = os.path.join(output_root, folder_name)
                 os.makedirs(run_dir, exist_ok=True)
 
                 legend_items_dir = os.path.join(run_dir, "legend_items")
@@ -537,8 +588,8 @@ class ImageAgent:
                             cv2.imencode('.png', text_patch)[1].tofile(text_path)
                         text_patch_rgb = cv2.cvtColor(text_patch, cv2.COLOR_BGR2RGB)
 
-                    rel_color_img = f"output/{folder_name}/legend_items/legend_color_{k}.png" if valid_c else ""
-                    rel_text_img = f"output/{folder_name}/legend_items/legend_text_{k}.png" if valid_t else ""
+                    rel_color_img = os.path.join(legend_items_dir, f"legend_color_{k}.png") if valid_c else ""
+                    rel_text_img = os.path.join(legend_items_dir, f"legend_text_{k}.png") if valid_t else ""
 
                     basic_legend = {
                         "id": int(k), "color_bbox": abs_color_bbox, "text_bbox": abs_text_bbox,
@@ -672,6 +723,7 @@ class ImageAgent:
                                     vis_seg_reinforced[my0:my1, mx0:mx1] = map_patch_reinforced
                                     yolo_success = True
                             except Exception:
+                                logger.warning("YOLO segmentation failed; using color fallback", exc_info=True)
                                 yolo_success = False
 
                         # === 🚀 自适应降维提取优化（曼哈顿色彩回退分支） ===
@@ -787,9 +839,8 @@ class ImageAgent:
                                     })
                                     region_id_counter += 1
 
-                except Exception as e:
-                    import traceback
-                    traceback.print_exc()
+                except Exception:
+                    logger.exception("Map region segmentation failed")
 
                 hie_meta = {
                     "date": time.strftime("%Y-%m-%d"),
@@ -804,6 +855,8 @@ class ImageAgent:
                 self._save_fast_vis(annotated_img, os.path.join(run_dir, "legend_items_detected.jpg"))
                 self._save_fast_vis(vis_seg_optimized, os.path.join(run_dir, "vis_seg_optimized.jpg"))
                 self._save_fast_vis(vis_seg_reinforced, os.path.join(run_dir, "vis_seg_reinforced.jpg"))
+                if 'cropped_legend' in locals():
+                    self._save_fast_vis(cropped_legend, os.path.join(run_dir, "cropped_legend.jpg"))
 
                 with open(os.path.join(run_dir, "legend_info.json"), "w", encoding="utf-8") as f:
                     json.dump(convert_for_json(basic_legends_list), f, ensure_ascii=False, indent=4)
@@ -815,8 +868,8 @@ class ImageAgent:
                                             by_alias=True) if hasattr(item, "model_dump") else item.dict(
                             exclude={'color_patch_base64', 'text_patch_base64'}, by_alias=True)
                         gemini_data.append(d)
-                    except:
-                        pass
+                    except Exception:
+                        logger.warning("Unable to serialize a legend result; item skipped", exc_info=True)
 
                 safe_model_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', self.model_name)
                 json_filename = f"legend_info_with_{safe_model_name}.json"
@@ -862,10 +915,12 @@ class ImageAgent:
 
             return {"analysis": ImageAnalysisResult(
                 summary=summary, legends=extracted_legends, regions=[],
-                annotated_map_base64=annotated_map_b64, cropped_legend_base64=cropped_legend_b64
+                annotated_map_base64=annotated_map_b64, cropped_legend_base64=cropped_legend_b64,
+                artifacts_dir=run_dir
             )}
 
-        except Exception as e:
+        except Exception:
+            logger.warning("Full image pipeline failed; switching to basic VLM analysis", exc_info=True)
             return self._simple_analysis(image_path, instruction)
 
     def _recognize_single_legend(self, legend: LegendItem):
@@ -889,11 +944,13 @@ class ImageAgent:
         if legend.text_patch_base64:
             txt_res = self._call_vlm(legend.text_patch_base64, LEGEND_TEXT_PROMPT)
             if isinstance(txt_res, dict):
-                legend.legend_text = txt_res.get("formation", txt_res.get("legend_text", "识别失败"))
-                legend.formation = txt_res.get("formation", txt_res.get("legend_text", ""))
-                legend.lithology = txt_res.get("lithology", "")
-                legend.age_text = txt_res.get("age_text", "")
-                legend.legend_text_confidence = float(txt_res.get("confidence", 0.0))
+                formation = _safe_text(txt_res.get("formation"))
+                legend_text = formation or _safe_text(txt_res.get("legend_text"))
+                legend.legend_text = legend_text
+                legend.formation = formation or legend_text
+                legend.lithology = _safe_text(txt_res.get("lithology"))
+                legend.age_text = _safe_text(txt_res.get("age_text"))
+                legend.legend_text_confidence = _safe_confidence(txt_res.get("confidence"))
             else:
                 txt_dict = _ensure_text_fallback(txt_res)
                 legend.legend_text = txt_dict.get("legend_text", "识别失败")
@@ -908,14 +965,22 @@ class ImageAgent:
 
     def _parse_legend_input(self, legends_input: List[Union[Dict, LegendItem]]) -> List[LegendItem]:
         parsed_legends = []
+        invalid_count = 0
         for item in legends_input:
             if isinstance(item, LegendItem):
                 parsed_legends.append(item)
             elif isinstance(item, dict):
                 try:
                     parsed_legends.append(LegendItem(**item))
-                except Exception:
-                    pass
+                except (ValidationError, TypeError, ValueError):
+                    invalid_count += 1
+                    logger.debug("Invalid legend item ignored", exc_info=True)
+        if invalid_count:
+            logger.warning(
+                "Ignored %s invalid legend items; %s valid items remain. "
+                "Historical results with null fields must be regenerated.",
+                invalid_count, len(parsed_legends),
+            )
         return parsed_legends
 
     def identify_clicked_region(self, image_path: str, click_point: tuple,
@@ -924,6 +989,9 @@ class ImageAgent:
 
         try:
             legends = self._parse_legend_input(legends_input)
+            if not legends:
+                logger.warning("Region matching skipped: no valid legends available")
+                return None
             image_bgr = cv2.imdecode(np.fromfile(image_path, dtype=np.uint8), cv2.IMREAD_COLOR)
             if image_bgr is None: return None
             image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
@@ -940,10 +1008,16 @@ class ImageAgent:
             click_arr = np.array(click_color, dtype=np.float32)
             candidates = []
             for leg in legends:
+                if len(leg.avg_color) != 3 or not np.all(np.isfinite(leg.avg_color)):
+                    logger.debug("Ignoring legend with invalid RGB color: id=%s", leg.id)
+                    continue
                 leg_rgb = np.array(leg.avg_color, dtype=np.float32)
                 dist = np.linalg.norm(click_arr - leg_rgb)
                 candidates.append((dist, leg))
 
+            if not candidates:
+                logger.warning("Region matching skipped: no legends with valid RGB colors")
+                return None
             candidates.sort(key=lambda x: x[0])
             final_match = candidates[0][1]
             best_score = float(candidates[0][0])
@@ -997,6 +1071,7 @@ class ImageAgent:
                                                                                       'model_dump') else final_match.symbol.dict(
                     by_alias=True)
             except Exception:
+                logger.debug("Unable to serialize geological symbol", exc_info=True)
                 symbol_dict = {}
 
             match_conf = round(max(0.0, 100.0 * (1.0 - best_score / 441.67)), 2)
@@ -1005,7 +1080,9 @@ class ImageAgent:
                 id=0, contour=real_cnt, centroid=[float(cx), float(cy)],
                 area=region_area, matched_legend_id=final_match.id, match_score=match_conf,
                 geo=RegionGeoInfo(
-                    symbol=symbol_dict, unit_name=final_match.legend_text, legend_id=final_match.id,
+                    symbol=symbol_dict,
+                    unit_name=_safe_text(final_match.legend_text) or _safe_text(final_match.formation) or "未识别地层",
+                    legend_id=final_match.id,
                     match_score=match_conf, legend_color_name=final_match.color_name,
                     legend_color_rgb=final_match.avg_color
                 ),
@@ -1016,27 +1093,33 @@ class ImageAgent:
                 )]
             )
 
-        except Exception as e:
-            print(f">>> [ImageAgent] 交互提取异常: {e}")
+        except Exception:
+            logger.exception("Interactive map region extraction failed")
             return None
 
     def _simple_analysis(self, image_path, instruction):
         try:
             b64_str = self._file_to_base64(image_path)
             if not b64_str:
-                return {"analysis": ImageAnalysisResult(summary="图像解析失败。", legends=[], regions=[])}
+                wrapped = FileValidationError("Image could not be decoded", details=str(image_path))
+                return {"analysis": ImageAnalysisResult(
+                    summary=public_error_message(wrapped), error_code=error_code(wrapped), legends=[], regions=[]
+                )}
 
             messages = [HumanMessage(content=[{"type": "text", "text": f"分析地质图件：{instruction}"},
-                                              {"type": "image_url",
-                                               "image_url": {"url": f"data:image/jpeg;base64,{b64_str}"}}])]
+                                              {"type": "image", "image": f"data:image/jpeg;base64,{b64_str}"}])]
             resp = self.llm.invoke(messages)
 
             print(f">>> [ImageAgent] 处理完成，基础全图直读分析完毕。")
             return {"analysis": ImageAnalysisResult(summary=self._extract_content_str(resp.content), legends=[],
                                                     regions=[])}
 
-        except Exception as e:
-            return {"analysis": ImageAnalysisResult(summary=f"模型失败: {str(e)}", legends=[], regions=[])}
+        except Exception as exc:
+            wrapped = ModelInvocationError("Basic image model invocation failed", details=str(exc))
+            logger.exception("Basic image model invocation failed")
+            return {"analysis": ImageAnalysisResult(
+                summary=public_error_message(wrapped), error_code=error_code(wrapped), legends=[], regions=[]
+            )}
 
     def _build_graph(self):
         workflow = StateGraph(AgentState)
@@ -1045,5 +1128,9 @@ class ImageAgent:
         workflow.add_edge("analyze_image", END)
         return workflow.compile()
 
-    def run(self, image_path: str, instruction: str = "请分析这张地质图件"):
-        return self.graph.invoke({"image_path": image_path, "instruction": instruction})
+    def run(self, image_path: str, instruction: str = "请分析这张地质图件", output_dir: str = ""):
+        return self.graph.invoke({
+            "image_path": image_path,
+            "instruction": instruction,
+            "output_dir": output_dir
+        })

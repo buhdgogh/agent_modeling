@@ -1,6 +1,7 @@
 import os
 import time
 import hashlib
+import logging
 import numpy as np
 import streamlit as st
 import streamlit.components.v1 as components
@@ -8,6 +9,12 @@ import html
 import inspect
 from PIL import Image
 from dotenv import load_dotenv
+from workspace_manager import create_run_dir, clear_session_workspace, save_uploaded_file
+from state_serialization import serialize_result_state
+from runtime_config import configure_tracing
+from app_errors import AgentExecutionError, ConfigurationError, public_error_message, error_code
+
+logger = logging.getLogger(__name__)
 
 # === 🚀 核心修复：解除 PIL 库对超大分辨率地质图的"像素炸弹"防爆限制 ===
 Image.MAX_IMAGE_PIXELS = None
@@ -34,17 +41,8 @@ def _get_DBManager():
             from db_manager import DBManager as DB
             _DBManager = DB
         except ImportError:
-            class _FakeDB:
-                def check_connection(self): return True
-                def create_session(self, title="新对话"): return 1
-                def get_all_sessions(self): return [{'id': 1, 'title': '默认会话'}]
-                def get_history(self, sid): return []
-                def add_message(self, sid, role, content, decision=None, result_state=None, file_path=None,
-                                file_type=None): pass
-                def delete_session(self, sid): pass
-                def update_session_title(self, sid, title): pass
-                def delete_empty_sessions(self, exclude_session_id=None): pass
-            _DBManager = _FakeDB
+            logger.exception("MySQL persistence dependency is unavailable")
+            raise
     return _DBManager
 
 def _get_cv2():
@@ -75,6 +73,7 @@ if os.path.exists(env_path):
     load_dotenv(env_path, override=True)
 
 ENV_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+configure_tracing()
 
 st.set_page_config(page_title="基于多智能体的三维地质建模钻孔数据生成", page_icon="🌍", layout="wide", initial_sidebar_state="expanded")
 
@@ -83,8 +82,12 @@ try:
     db = DB()
     if not db.check_connection(): st.error("⚠️ 数据库连接失败。"); st.stop()
 except Exception:
-    st.error("数据库初始化错误");
+    logger.exception("Database initialization failed")
+    st.error("数据库初始化错误")
     st.stop()
+
+# DBManager reloads api_key.env; reapply explicit telemetry policy afterward.
+configure_tracing()
 
 # === 全局状态初始化 ===
 if "master_agent" not in st.session_state: st.session_state.master_agent = None
@@ -101,34 +104,147 @@ if "app_initialized" not in st.session_state:
         initial_sessions = db.get_all_sessions()
         if initial_sessions:
             st.session_state.current_session_id = initial_sessions[0]['id']
-    except:
-        pass
+    except Exception:
+        logger.exception("Failed to restore the initial session")
 
-# === 🚀 样式代码：清理所有输入框黑魔法，仅保留内部组件美化 ===
+# === UI theme: professional geological workspace ===
 st.markdown("""
 <style>
-    /* 全局小组件美化 */
-    .agent-box { padding: 5px 8px; border-radius: 12px; border: 1px solid #eee; text-align: center; font-size: 0.75em; margin:2px; display:inline-block; }
-    .agent-active { background-color: #e8f5e9; color: #2e7d32; border-color: #4CAF50; font-weight: bold; }
-    .agent-inactive { background-color: #f5f5f5; color: #aaa; }
-    .geo-card { background: #f0f8ff; padding: 15px; border-radius: 8px; border-left: 5px solid #2196F3; margin-top: 10px; font-size: 0.95em; line-height: 1.6; }
-    .thought-process { background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 10px 15px; margin: 10px 0; border-radius: 0 4px 4px 0; font-family: monospace; font-size: 0.9em; color: #495057; }
+    :root {
+        --geo-ink: #172b2d;
+        --geo-muted: #637779;
+        --geo-line: #dce6e3;
+        --geo-soft: #f3f7f5;
+        --geo-panel: #ffffff;
+        --geo-green: #176b5b;
+        --geo-green-dark: #105247;
+        --geo-sand: #c98b3c;
+        --geo-blue: #3e7086;
+    }
+    .stApp { background: #f7faf8; color: var(--geo-ink); }
+    [data-testid="stAppViewContainer"] > .main {
+        background:
+          radial-gradient(circle at 92% 2%, rgba(23,107,91,.07), transparent 25rem),
+          #f7faf8;
+    }
+    [data-testid="stMainBlockContainer"] {
+        max-width: 1180px;
+        padding-top: 1.4rem;
+        padding-bottom: 8rem;
+    }
+    #MainMenu, footer { visibility: hidden; }
+
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background: #eef4f1;
+        border-right: 1px solid var(--geo-line);
+    }
+    [data-testid="stSidebarContent"] { padding-top: .65rem; }
+    .sidebar-brand {
+        display: flex; align-items: center; gap: .8rem;
+        padding: .7rem .35rem 1rem;
+    }
+    .brand-mark {
+        display: grid; place-items: center; width: 42px; height: 42px;
+        border-radius: 13px; background: var(--geo-green); color: white;
+        font-size: 1.35rem; box-shadow: 0 8px 20px rgba(23,107,91,.18);
+    }
+    .brand-name { color: var(--geo-ink); font-weight: 750; font-size: 1.05rem; }
+    .brand-subtitle { color: var(--geo-muted); font-size: .73rem; margin-top: .1rem; }
+    .section-label {
+        color: #54706d; font-size: .72rem; font-weight: 750;
+        letter-spacing: .08em; text-transform: uppercase; margin: .25rem 0 .45rem;
+    }
+    [data-testid="stSidebar"] hr { margin: .8rem 0; border-color: var(--geo-line); }
+    [data-testid="stSidebar"] button {
+        border-radius: 10px !important; min-height: 2.45rem;
+        border-color: #d5e1dd !important; box-shadow: none !important;
+    }
+    [data-testid="stSidebar"] button[kind="primary"] {
+        background: var(--geo-green) !important; border-color: var(--geo-green) !important;
+    }
+    [data-testid="stSidebar"] button[kind="secondary"] { justify-content: flex-start !important; }
+    [data-testid="stSidebar"] button[kind="secondary"] p {
+        font-size: .88rem; margin: 0 !important; text-align: left !important;
+    }
+
+    /* Page header and empty state */
+    .workspace-hero {
+        background: rgba(255,255,255,.92); border: 1px solid var(--geo-line);
+        border-radius: 18px; padding: 1.2rem 1.35rem; margin-bottom: 1.1rem;
+        box-shadow: 0 8px 28px rgba(31,65,60,.055);
+        display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    }
+    .workspace-eyebrow { color: var(--geo-green); font-size: .72rem; font-weight: 800; letter-spacing: .09em; }
+    .workspace-title { color: var(--geo-ink); font-size: 1.45rem; font-weight: 760; margin: .2rem 0; }
+    .workspace-subtitle { color: var(--geo-muted); font-size: .84rem; }
+    .hero-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
+    .meta-pill {
+        background: var(--geo-soft); border: 1px solid var(--geo-line); color: #42615f;
+        padding: .34rem .62rem; border-radius: 999px; font-size: .72rem; white-space: nowrap;
+    }
+    .empty-panel {
+        padding: 2.4rem 1rem 1.35rem; text-align: center;
+        color: var(--geo-muted);
+    }
+    .empty-icon {
+        width: 58px; height: 58px; display: grid; place-items: center; margin: 0 auto .85rem;
+        background: #e5f0ec; color: var(--geo-green); border-radius: 18px; font-size: 1.65rem;
+    }
+    .empty-title { color: var(--geo-ink); font-weight: 750; font-size: 1.15rem; margin-bottom: .35rem; }
+    .starter-card {
+        min-height: 112px; background: white; border: 1px solid var(--geo-line);
+        border-radius: 14px; padding: 1rem; color: var(--geo-muted); font-size: .8rem;
+        box-shadow: 0 5px 18px rgba(31,65,60,.04);
+    }
+    .starter-card strong { display:block; color: var(--geo-ink); font-size: .9rem; margin: .35rem 0; }
+
+    /* Chat and result surfaces */
+    [data-testid="stChatMessage"] {
+        background: white; border: 1px solid var(--geo-line); border-radius: 15px;
+        padding: .85rem 1rem; margin-bottom: .7rem;
+        box-shadow: 0 4px 16px rgba(31,65,60,.035);
+    }
+    [data-testid="stChatMessage"] [data-testid="stChatMessageAvatarUser"] {
+        background: #e8eeec; color: var(--geo-ink);
+    }
+    [data-testid="stChatMessage"] [data-testid="stChatMessageAvatarAssistant"] {
+        background: #dceee8; color: var(--geo-green-dark);
+    }
+    [data-testid="stExpander"] {
+        background: rgba(255,255,255,.85); border: 1px solid var(--geo-line);
+        border-radius: 12px !important; overflow: hidden;
+    }
+    [data-testid="stMetric"] {
+        background: var(--geo-soft); border: 1px solid var(--geo-line);
+        border-radius: 12px; padding: .7rem .85rem;
+    }
+    [data-testid="stDataFrame"] { border: 1px solid var(--geo-line); border-radius: 12px; overflow: hidden; }
+    [data-testid="stFileUploaderDropzone"] {
+        background: rgba(255,255,255,.65); border: 1px dashed #9ebbb3; border-radius: 12px;
+    }
+    [data-testid="stStatusWidget"] { border-color: var(--geo-line); border-radius: 12px; }
+    .agent-box { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--geo-line); text-align: center; font-size: .75em; margin:2px; display:inline-block; }
+    .agent-active { background: #dff1eb; color: var(--geo-green-dark); border-color: #88bbae; font-weight: 700; }
+    .agent-inactive { background: var(--geo-soft); color: #8a9998; }
+    .geo-card { background: #eef7f4; padding: 15px; border-radius: 12px; border-left: 4px solid var(--geo-green); margin-top: 10px; font-size: .95em; line-height: 1.6; }
+    .thought-process { background: #f3f7f5; border-left: 3px solid #78928e; padding: 10px 15px; margin: 10px 0; border-radius: 0 8px 8px 0; font-family: ui-monospace, monospace; font-size: .84em; color: #48615f; }
     .thought-item { margin-bottom: 5px; }
+    .legend-row { display: flex; align-items: center; margin-bottom: 5px; border-bottom: 1px solid var(--geo-line); padding: 5px 0; }
+    .legend-img { width: 40px; height: 30px; object-fit: cover; border-radius: 6px; margin-right: 10px; border:1px solid var(--geo-line); }
 
-    /* 侧边栏按钮美化 */
-    [data-testid="stSidebar"] button[kind="secondary"] { justify-content: flex-start !important; padding-left: 15px !important; }
-    [data-testid="stSidebar"] button[kind="secondary"] > div[data-testid="stMarkdownContainer"],
-    [data-testid="stSidebar"] button[kind="secondary"] > div { width: 100% !important; display: flex !important; justify-content: flex-start !important; }
-    [data-testid="stSidebar"] button[kind="secondary"] p { font-size: 0.95rem; margin: 0 !important; text-align: left !important; width: 100% !important; display: flex !important; justify-content: flex-start !important; }
-    [data-testid="stSidebar"] button[kind="primary"] { justify-content: center !important; }
-    [data-testid="stSidebar"] hr { margin-top: 1rem; margin-bottom: 1rem; opacity: 0.5; }
-    .legend-row { display: flex; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #eee; padding: 5px 0; }
-    .legend-img { width: 40px; height: 30px; object-fit: cover; border-radius: 4px; margin-right: 10px; border:1px solid #ddd; }
-
-    /* 悬浮终止按钮的底层容器透明化，打造漂浮感 */
-    [data-testid="stBottom"] > div {
-        background-color: transparent !important;
-        padding-bottom: 0px !important;
+    /* Composer */
+    [data-testid="stBottom"] > div { background: linear-gradient(transparent, #f7faf8 26%) !important; padding-bottom: .75rem !important; }
+    [data-testid="stChatInput"] {
+        border: 1px solid #bfd0cb !important; border-radius: 15px !important;
+        background: white !important; box-shadow: 0 10px 30px rgba(31,65,60,.11) !important;
+    }
+    [data-testid="stChatInput"]:focus-within { border-color: var(--geo-green) !important; }
+    @media (max-width: 760px) {
+        [data-testid="stMainBlockContainer"] { padding: .75rem .7rem 7rem; }
+        .workspace-hero { align-items: flex-start; flex-direction: column; padding: 1rem; }
+        .hero-meta { justify-content: flex-start; }
+        .workspace-title { font-size: 1.2rem; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -137,6 +253,22 @@ st.markdown("""
 def safe_get(obj, key):
     if isinstance(obj, dict): return obj.get(key)
     return getattr(obj, key, None)
+
+
+def build_langchain_history(history, max_messages=20):
+    """Convert persisted MySQL messages into bounded LangChain chat context."""
+    from langchain_core.messages import AIMessage, HumanMessage
+
+    converted = []
+    for item in (history or [])[-max_messages:]:
+        content = str(item.get("content") or "").strip()
+        if not content:
+            continue
+        if item.get("role") == "user":
+            converted.append(HumanMessage(content=content))
+        elif item.get("role") == "assistant":
+            converted.append(AIMessage(content=content))
+    return converted
 
 
 def highlight_contour_on_image(image_path, contour, color=(0, 0, 255), thickness=5):
@@ -169,7 +301,8 @@ def show_geo_viewer_modal(image_path, legends, unique_key):
             original_img = Image.open(image_path)
             orig_w, orig_h = original_img.size
             scale_factor = orig_w / DISPLAY_WIDTH
-        except:
+        except Exception:
+            logger.exception("Failed to load image in interactive viewer: %s", image_path)
             st.error("无法加载图片")
             return
 
@@ -267,8 +400,9 @@ def show_geo_viewer_modal(image_path, legends, unique_key):
                             del display_json['contour']
 
                     st.json(display_json)
-                except Exception as e:
-                    st.warning(f"JSON 序列化显示失败: {e}")
+                except Exception:
+                    logger.exception("Unable to render selected region as JSON")
+                    st.warning("JSON 数据暂时无法显示，请查看服务日志。（错误码：SERIALIZATION_ERROR）")
 
         else:
             st.info("👈 请在左侧点击想要解析的地质区块...")
@@ -465,7 +599,8 @@ def generate_kg_html(text, nodes, edges):
 
 
 def render_analysis_result(decision, result_state, image_path=None, msg_id=None):
-    thought_log = safe_get(result_state, 'thought_log')
+    thought_log = (safe_get(result_state, 'turn_thought_log') or
+                   safe_get(result_state, 'thought_log'))
     if thought_log:
         with st.expander("🛠️ 智能体思考与调用路径", expanded=False):
             st.markdown('<div class="thought-process">', unsafe_allow_html=True)
@@ -555,17 +690,26 @@ def render_analysis_result(decision, result_state, image_path=None, msg_id=None)
         cropped_legend_base64 = final_image_analysis.get('cropped_legend_base64') if isinstance(final_image_analysis,
                                                                                                 dict) else getattr(
             final_image_analysis, 'cropped_legend_base64', None)
+        artifacts_dir = final_image_analysis.get('artifacts_dir') if isinstance(final_image_analysis, dict) else getattr(
+            final_image_analysis, 'artifacts_dir', None)
+        annotated_map_path = os.path.join(artifacts_dir, "legend_items_detected.jpg") if artifacts_dir else ""
+        cropped_legend_path = os.path.join(artifacts_dir, "cropped_legend.jpg") if artifacts_dir else ""
 
-        if annotated_map_base64 or cropped_legend_base64:
+        if (annotated_map_base64 or cropped_legend_base64 or
+                os.path.exists(annotated_map_path) or os.path.exists(cropped_legend_path)):
             st.markdown("##### 🎯 智能图例区域定位")
             cols = st.columns(2)
-            if annotated_map_base64:
+            if annotated_map_base64 or os.path.exists(annotated_map_path):
                 with cols[0]:
-                    st.image(f"data:image/jpeg;base64,{annotated_map_base64}", caption="🗺️ 自动圈定的图例分布区",
+                    annotated_source = (f"data:image/jpeg;base64,{annotated_map_base64}"
+                                        if annotated_map_base64 else annotated_map_path)
+                    st.image(annotated_source, caption="🗺️ 自动圈定的图例分布区",
                              width="stretch")
-            if cropped_legend_base64:
+            if cropped_legend_base64 or os.path.exists(cropped_legend_path):
                 with cols[1]:
-                    st.image(f"data:image/jpeg;base64,{cropped_legend_base64}", caption="✂️ 精确截取的图例内容",
+                    cropped_source = (f"data:image/jpeg;base64,{cropped_legend_base64}"
+                                      if cropped_legend_base64 else cropped_legend_path)
+                    st.image(cropped_source, caption="✂️ 精确截取的图例内容",
                              width="stretch")
 
         legends = final_image_analysis.get('legends', []) if isinstance(final_image_analysis, dict) else getattr(
@@ -672,38 +816,81 @@ def render_analysis_result(decision, result_state, image_path=None, msg_id=None)
 try:
     db.delete_empty_sessions(exclude_session_id=st.session_state.current_session_id)
 except Exception:
-    pass
+    logger.exception("Failed to clean empty sessions")
 
 _all_sessions = db.get_all_sessions()
 _valid_ids = [s['id'] for s in _all_sessions]
 if st.session_state.current_session_id is not None and st.session_state.current_session_id not in _valid_ids:
     st.session_state.current_session_id = _valid_ids[0] if _valid_ids else None
 
+if st.session_state.current_session_id is None:
+    new_session_id = db.create_session(title="新对话")
+    if new_session_id is None or new_session_id < 0:
+        st.error("无法创建会话工作区，请检查数据库连接。")
+        st.stop()
+    st.session_state.current_session_id = new_session_id
+    _all_sessions = db.get_all_sessions()
+
 cur_sid = st.session_state.current_session_id
 msgs = db.get_history(cur_sid) if cur_sid is not None else []
 display_sessions = db.get_all_sessions()
 
 with st.sidebar:
-    st.header("⚙️ 控制面板")
+    st.markdown("""
+    <div class="sidebar-brand">
+      <div class="brand-mark">◫</div>
+      <div><div class="brand-name">GeoAgent Studio</div>
+      <div class="brand-subtitle">多智能体地质建模工作台</div></div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    if st.button("🔄 重置当前对话状态", type="secondary", use_container_width=True):
-        st.session_state.is_processing = False
-        st.session_state.pending_prompt = None
-        st.rerun()
+    if st.button("＋ 新建分析会话", type="primary", width="stretch"):
+        new_session_id = db.create_session(title="新对话")
+        if new_session_id is not None and new_session_id >= 0:
+            st.session_state.current_session_id = new_session_id
+            st.session_state.uploader_key += 1
+            st.rerun()
+        st.error("新建会话失败，请检查数据库连接。")
+
+    if st.button(
+        "↻ 清空并重新开始",
+        type="secondary",
+        use_container_width=True,
+        help="删除当前会话全部历史、运行状态和上传缓存，此操作不可撤销。"
+    ):
+        if cur_sid is not None:
+            checkpoint_cleared = True
+            if st.session_state.master_agent:
+                try:
+                    st.session_state.master_agent.reset_thread(cur_sid)
+                except Exception:
+                    checkpoint_cleared = False
+                    logger.exception("Failed to reset checkpoint for session %s", cur_sid)
+            cleared = (
+                db.clear_session_history(cur_sid, reset_title=True)
+                if checkpoint_cleared else False
+            )
+            if cleared and checkpoint_cleared:
+                try:
+                    clear_session_workspace(cur_sid)
+                except Exception:
+                    logger.exception("Failed to clear workspace for session %s", cur_sid)
+                for state_key in list(st.session_state.keys()):
+                    if state_key.startswith(("last_region_", "legends_cache_", "last_coords_")):
+                        del st.session_state[state_key]
+                st.session_state.uploader_key += 1
+                st.session_state.is_processing = False
+                st.session_state.pending_prompt = None
+                st.toast("当前会话已清空，可以重新开始。", icon="✅")
+                st.rerun()
+            else:
+                st.error("会话未能完全重置，请检查数据库连接或运行日志。")
 
     st.divider()
-
-    st.title("🌍 地质智能助手")
-    if st.button("➕ 新建对话", type="primary", width="stretch"):
-        st.session_state.current_session_id = None
-        st.session_state.uploader_key += 1
-        st.rerun()
-    st.divider()
-
-    st.caption("🤖 大模型引擎配置")
+    st.markdown('<div class="section-label">AI ENGINE</div>', unsafe_allow_html=True)
     model_options = ["qwen-max", "qwen-plus", "deepseek-r1"]
     selected_model = st.selectbox(
-        "选择任务执行核心模型",
+        "任务执行模型",
         model_options,
         index=0,
         help="注意：主控路由节点将固定使用qwen-max保证调度稳定性，此处选择的模型将用于承担最繁重的文本提取与逻辑推理任务。"
@@ -719,31 +906,42 @@ with st.sidebar:
                 MA = _get_MasterAgent()
                 st.session_state.master_agent = MA(api_key=ENV_API_KEY, model_name=selected_model)
                 st.toast(f"计算引擎已成功切换至: {selected_model}", icon="🔄")
-            except Exception as e:
-                st.error(f"引擎初始化失败: {e}")
+            except Exception as exc:
+                wrapped = ConfigurationError("Agent engine initialization failed", details=str(exc))
+                logger.exception("Agent engine initialization failed: model=%s", selected_model)
+                st.error(public_error_message(wrapped))
     st.divider()
 
-    st.caption("💬 历史会话")
+    st.markdown('<div class="section-label">RECENT SESSIONS</div>', unsafe_allow_html=True)
+    if not display_sessions:
+        st.caption("暂无历史会话")
     for s in display_sessions:
         col1, col2 = st.columns([8.5, 1.5])
         with col1:
             is_active = (cur_sid == s['id'])
-            prefix = "🔹 " if is_active else "🔸 "
+            prefix = "● " if is_active else "○ "
             if st.button(f"{prefix}{s['title']}", key=f"s_{s['id']}", width="stretch"):
                 st.session_state.current_session_id = s['id']
                 st.rerun()
         with col2:
             if st.button("🗑️", key=f"del_{s['id']}", help="删除此会话", width="stretch"):
+                if st.session_state.master_agent:
+                    st.session_state.master_agent.reset_thread(s['id'])
                 db.delete_session(s['id'])
+                try:
+                    clear_session_workspace(s['id'])
+                except Exception:
+                    logger.exception("Failed to delete workspace for session %s", s['id'])
                 if cur_sid == s['id']: st.session_state.current_session_id = None
                 st.rerun()
     st.divider()
 
-    st.caption("📂 当前会话工作区 (文件投喂)")
+    st.markdown('<div class="section-label">DATA WORKSPACE</div>', unsafe_allow_html=True)
     uploaded_files = st.file_uploader(
-        "文件", type=["txt", "jpg", "png", "csv", "tif", "tiff", "shp", "shx", "dbf", "prj", "cpg"],
+        "拖入地质报告、图件或空间数据", type=["txt", "jpg", "png", "csv", "tif", "tiff", "shp", "shx", "dbf", "prj", "cpg"],
         accept_multiple_files=True, label_visibility="collapsed", key=f"file_uploader_{st.session_state.uploader_key}"
     )
+    st.caption("TXT · JPG/PNG · CSV · SHP · GeoTIFF")
     file_paths = []
     image_paths = []
     file_context = ""
@@ -751,19 +949,12 @@ with st.sidebar:
     if uploaded_files:
         for uploaded in uploaded_files:
             fname = uploaded.name
-            temp_dir = os.path.join(current_dir, "temp")
-            if not os.path.exists(temp_dir): os.makedirs(temp_dir)
             ext = os.path.splitext(fname)[1].lower()
-            if ext in ['.shp', '.shx', '.dbf', '.prj', '.cpg']:
-                base_name = os.path.splitext(fname)[0]
-                shp_folder = os.path.join(temp_dir, base_name)
-                if not os.path.exists(shp_folder): os.makedirs(shp_folder)
-                save_path = os.path.join(shp_folder, fname)
-            else:
-                save_path = os.path.join(temp_dir, fname)
-
-            with open(save_path, "wb") as f:
-                f.write(uploaded.getbuffer())
+            save_path = save_uploaded_file(
+                uploaded,
+                session_id=cur_sid,
+                batch_id=st.session_state.uploader_key
+            )
 
             if fname.lower().endswith(('.jpg', '.png')):
                 image_paths.append(save_path)
@@ -782,7 +973,8 @@ with st.sidebar:
                     except UnicodeDecodeError:
                         try:
                             content = uploaded.getvalue().decode("gbk")
-                        except:
+                        except UnicodeDecodeError:
+                            logger.warning("Text file is neither UTF-8 nor GBK: %s", fname)
                             content = uploaded.getvalue().decode("utf-8", errors="ignore")
                     file_context += f"\n--- {fname} ---\n{content}\n"
 
@@ -792,21 +984,55 @@ with st.sidebar:
 # ==========================================
 # 主界面聊天与逻辑
 # ==========================================
-current_title = "✨ 智能分析终端"
+current_title = "智能分析终端"
 if cur_sid is None:
-    current_title = "✨ 新对话"
+    current_title = "新建地质分析"
 else:
     for s in display_sessions:
         if s['id'] == cur_sid:
-            current_title = f"💬 {s['title']}"
+            current_title = s['title']
             break
 
-st.header(current_title)
-if cur_sid is None:
-    st.info("👋 欢迎！这是一个全新的对话。请在左侧侧边栏上传分析所需的文件，或者在下方直接向我发送指令。")
+safe_title = html.escape(str(current_title))
+safe_model = html.escape(str(selected_model))
+file_count = len(image_paths) + len(file_paths)
+st.markdown(f"""
+<section class="workspace-hero">
+  <div>
+    <div class="workspace-eyebrow">GEOLOGICAL INTELLIGENCE WORKSPACE</div>
+    <div class="workspace-title">{safe_title}</div>
+    <div class="workspace-subtitle">报告解析、图件识别、知识融合与虚拟钻孔生成</div>
+  </div>
+  <div class="hero-meta">
+    <span class="meta-pill">模型 · {safe_model}</span>
+    <span class="meta-pill">文件 · {file_count}</span>
+    <span class="meta-pill">有状态会话 · 已启用</span>
+  </div>
+</section>
+""", unsafe_allow_html=True)
+
+if not msgs:
+    st.markdown("""
+    <div class="empty-panel">
+      <div class="empty-icon">⌁</div>
+      <div class="empty-title">开始一次地质智能分析</div>
+      <div>在左侧添加数据，然后在底部输入任务；也可以直接进行地质知识问答。</div>
+    </div>
+    """, unsafe_allow_html=True)
+    starter_cols = st.columns(3)
+    starter_cards = [
+        ("▤", "解析地质报告", "抽取地层、年代、岩性、厚度与叠覆关系"),
+        ("◈", "识别地质图件", "检测图例、分割区域并匹配地层符号"),
+        ("⌖", "生成虚拟钻孔", "融合报告、图件、SHP 与 DEM 生成三维点云"),
+    ]
+    for col, (icon_text, title_text, desc_text) in zip(starter_cols, starter_cards):
+        with col:
+            st.markdown(
+                f'<div class="starter-card"><span>{icon_text}</span><strong>{title_text}</strong>{desc_text}</div>',
+                unsafe_allow_html=True
+            )
 
 for msg in msgs:
-    # 🌟 为聊天气泡引入拟人化头像，大幅提升沉浸感
     avatar_icon = "👤" if msg["role"] == "user" else "✨"
 
     with st.chat_message(msg["role"], avatar=avatar_icon):
@@ -843,7 +1069,12 @@ for msg in msgs:
                                 dur = ns.get("duration_ms", 0)
                                 status = ns.get("status", "?")
                                 icon = "✅" if status == "success" else "❌" if status == "failed" else "⏳"
-                                st.text(f"{icon} {name}: {dur:.0f}ms ({status})")
+                                model = ns.get("model") or "rule/runtime"
+                                retries = ns.get("retry_count", 0)
+                                error_suffix = f" · {ns.get('error_code')}" if ns.get("error_code") else ""
+                                st.text(
+                                    f"{icon} {name}: {dur:.0f}ms · {model} · retries={retries}{error_suffix}"
+                                )
 
                         # Confidence scores
                         conf_cols = st.columns(4)
@@ -881,6 +1112,15 @@ for msg in msgs:
                             st.caption(f"**🔄 回溯历史 ({len(bh)} 次)**")
                             for h in bh:
                                 st.text(h)
+
+                        execution_errors = rs.get("errors", [])
+                        if execution_errors:
+                            st.caption(f"**❌ 结构化错误 ({len(execution_errors)} 项)**")
+                            for item in execution_errors:
+                                st.text(
+                                    f"{item.get('node', '?')} · {item.get('code', 'UNKNOWN')} · "
+                                    f"{item.get('message', '')}"
+                                )
 
 # === 🚀 新增：隐形锚点与自动滚动 JS 逻辑 ===
 # 在渲染完所有历史消息后，立即注入一个隐形 DOM，并通知前端瞬间滚动到此位置
@@ -982,9 +1222,10 @@ if st.session_state.is_processing and st.session_state.pending_prompt:
                                    temperature=0.1)
             title_prompt = f"请将下面的提问精炼成一个极简的对话小标题（最多8个字）。要求：直接输出纯文本，绝不包含任何标点符号、引号或多余的解释说明。\n\n提问：{prompt}"
             title_res = title_llm.invoke([HumanMessage(content=title_prompt)])
-            new_title = title_res.content.strip().replace('"', '').replace("'", "").replace("。", "")
+            new_title = (title_res.content or "").strip().replace('"', '').replace("'", "").replace("。", "")
             if new_title: db.update_session_title(cur_sid, new_title)
         except Exception:
+            logger.exception("Automatic session title generation failed")
             db.update_session_title(cur_sid, prompt[:8] + "...")
 
     # 在执行期间也带上高雅的头像
@@ -997,19 +1238,21 @@ if st.session_state.is_processing and st.session_state.pending_prompt:
                     st.caption(f"📄 {os.path.basename(p)}")
         st.markdown(prompt)
 
-    lc_hist = []
+    lc_hist = build_langchain_history(msgs)
     with st.chat_message("assistant", avatar="✨"):
         status = st.status("🧠 分析及生成中...", expanded=True)
         try:
             start_time = time.time()
+            run_workspace = create_run_dir(cur_sid)
             result = st.session_state.master_agent.run(
                 text=file_context, instruction=prompt, file_path=curr_file_db, image_path=image_path,
-                chat_history=lc_hist
+                chat_history=lc_hist, session_id=cur_sid, workspace_dir=run_workspace
             )
             elapsed_time = time.time() - start_time
             print(f">>> [System] 本次任务后台执行总耗时: {elapsed_time:.2f} 秒")
 
-            for l in result.get("thought_log", []): status.write(l)
+            current_logs = result.get("turn_thought_log", result.get("thought_log", []))
+            for l in current_logs: status.write(l)
             status.update(label="✅ 完成", state="complete", expanded=False)
 
             decision = result.get("next_step")
@@ -1019,30 +1262,22 @@ if st.session_state.is_processing and st.session_state.pending_prompt:
             st.markdown(final_resp)
 
             # Store only safe subset of state (MySQL JSON column has size/type limits)
-            import math
-            def _safe_json(obj, depth=0):
-                if depth > 4 or obj is None: return None
-                if isinstance(obj, (str, int, bool)): return obj
-                if isinstance(obj, float):
-                    return None if (math.isnan(obj) or math.isinf(obj)) else round(obj, 6)
-                if hasattr(obj, 'model_dump'): return _safe_json(obj.model_dump(), depth+1)
-                if hasattr(obj, 'dict'): return _safe_json(obj.dict(), depth+1)
-                if isinstance(obj, dict):
-                    return {k: _safe_json(v, depth+1) for k, v in obj.items()
-                            if k not in ('messages','chat_history')}
-                if isinstance(obj, list):
-                    return [_safe_json(v, depth+1) for v in obj[:50]]
-                return str(obj)[:200]
-            safe_result = _safe_json(result) or {}
+            safe_result = serialize_result_state(result) or {}
+            safe_result["thought_log"] = current_logs
             db.add_message(cur_sid, "assistant", final_resp, decision, safe_result, file_path=curr_file_db,
                            file_type=curr_type_db)
             st.session_state.uploader_key += 1
 
         except Exception as e:
+            wrapped = AgentExecutionError("Top-level request execution failed", details=str(e))
+            logger.exception("Top-level request execution failed: session_id=%s", cur_sid)
             status.update(label="❌ 出错", state="error")
-            err_msg = f"执行过程中发生系统异常: {str(e)}"
+            err_msg = public_error_message(wrapped)
             st.error(err_msg)
-            db.add_message(cur_sid, "assistant", err_msg, decision="error", result_state={"error": str(e)},
+            db.add_message(cur_sid, "assistant", err_msg, decision="error", result_state={
+                               "errors": [{"node": "application", "code": error_code(wrapped),
+                                           "message": err_msg}]
+                           },
                            file_path=curr_file_db, file_type=curr_type_db)
 
         st.session_state.is_processing = False

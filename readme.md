@@ -59,9 +59,21 @@
 
 ### Agent 通信方式
 
-当前系统采用中心化 Supervisor 模式：`MasterAgent` 将专业 Agent 封装为 LangChain Tool，通过 LangGraph 状态完成任务路由，再以 Python 函数调用和结构化对象传递结果。各 Agent 运行在同一进程内，不依赖消息队列或跨服务网络通信。
+当前系统采用中心化 Supervisor 模式：`MasterAgent` 将专业 Agent 封装为 LangChain Tool，通过 LangGraph 状态完成任务路由，再以 Python 函数调用和结构化对象传递结果。`messages` 使用 `add_messages` Reducer，执行日志使用追加型 Reducer；图通过 SQLite `SqliteSaver` 持久化检查点，并以 MySQL 会话 ID 作为 LangGraph `thread_id`。各 Agent 运行在同一进程内，不依赖消息队列或跨服务网络通信。
 
-自动钻孔任务内部使用线程池并行执行文本抽取和图像解析，两个结果返回总控 Agent 后进入融合步骤。该设计保持了较低的通信开销，也便于在单机环境中调试和复现实验。
+自动钻孔任务内部使用线程池并行执行文本抽取和图像解析，两个结果返回总控 Agent 后进入融合步骤。每轮调用前，系统还会将当前 MySQL 会话最近的用户与助手消息转换为 LangChain 消息，作为下一轮路由上下文。该设计保持了较低的通信开销，也便于在单机环境中调试和复现实验。
+
+侧栏的“清空并重新开始”会同时删除当前会话的 LangGraph Checkpoint、MySQL 消息历史、上传组件状态和图件交互缓存，并将会话标题恢复为“新对话”；会话记录本身会保留，方便直接开始新的分析任务。
+
+### 运行监控与异常处理
+
+LangSmith 云端追踪默认关闭，本地节点监控与 MySQL 记录不受影响。如需启用，请配置 `APP_ENABLE_LANGSMITH=true` 和 `LANGSMITH_API_KEY` 后重启应用；旧的 `LANGSMITH_TRACING` / `LANGCHAIN_TRACING_V2` 开关由该显式配置统一控制。网络不可用或云端 Trace 配额耗尽时，可关闭该选项避免重复上报失败。
+
+Checkpoint 使用精确的业务模型类型白名单，支持严格 MsgPack 反序列化。历史结果保存默认保留全部图例，不再截断为 50 项；之前已截断或损坏的历史数据需重新执行解析恢复。视觉模型返回的空文本及无效置信度会在入模前标准化，避免交互区域识别出现空值校验错误。
+
+每轮 LangGraph 执行会在状态中记录真实的节点运行指标，包括节点状态、耗时、实际模型、重试次数和错误码；路由决策、结构化错误以及文本、图像、融合和整体置信度也会随助手消息写入 MySQL，刷新页面后仍可在“Agent 运行监控”中查看。置信度来自专业 Agent 的结构化输出聚合；当模型未返回置信度时，该字段保持为空，不使用随机数或固定演示值。
+
+项目通过 `app_errors.py` 统一划分配置、数据库、模型调用、文件校验、地理计算和 Agent 执行异常。服务日志保留异常上下文与完整堆栈，前端和会话历史只展示稳定的中文提示与错误码，避免把密钥、路径、SQL 或第三方接口细节直接暴露给用户。可降级能力（例如 YOLO、PEACE 或 Neo4j）失败时会记录日志并进入原有回退流程，不中断可继续完成的主任务。
 
 ## 处理流程
 
@@ -113,15 +125,20 @@ agent_modeling/
 |-- neo4j_manager.py                # Neo4j 图谱持久化
 |-- db.sql                          # MySQL 数据表结构
 |-- requirements.txt                # Python 依赖锁定文件
-|-- PEACE/                          # 图件检测模型、权重和地学工具
-|-- experiments/
-|   |-- modeling/                   # GemPy 建模实验
-|   |-- quantitative/               # 定量验证
-|   |-- qualitative/                # 定性验证
-|   `-- run_validation.py           # 验证统一入口
-|-- temp/                           # 中间数据与生成 CSV
-`-- output/                         # 图像分析及论文图件输出
+|-- requirements-checkpoint.txt     # SQLite Checkpoint 依赖
+|-- workspace_manager.py            # 会话级上传与运行目录隔离
+|-- fusion_generation.py           # 融合配置生成
+|-- fusion_matching.py             # 图文实体匹配
+|-- fusion_validation.py           # 融合配置校验与修复
+|-- app_errors.py                  # 统一异常类型与安全错误信息
+|-- state_serialization.py         # 会话结果安全序列化
+|-- runtime_config.py              # 外部追踪开关
+|-- PEACE/                          # 图件检测与地学工具源码（不含模型权重）
+|-- runtime/                        # 按会话隔离的上传、运行产物与 Checkpoint
+`-- output/                         # 旧版运行结果兼容目录
 ```
+
+仓库采用源码发布模式，不包含实验脚本、论文、实验图片、数据集、运行产物和模型权重；这些内容仅保留在本地研究环境中。
 
 ## 环境准备
 
@@ -132,9 +149,17 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install -r requirements-checkpoint.txt
 ```
 
 如果直接通过 `pip` 安装地理计算依赖失败，可以先使用 Conda 创建包含 GDAL、GeoPandas 和 Rasterio 的环境，再安装其余依赖。
+
+图件检测需要自行准备 PEACE 模型权重，并分别放置到：
+
+```text
+PEACE/models/det_component/weights/best.pt
+PEACE/models/det_legend/weights/best.pt
+```
 
 ## 配置服务
 
@@ -160,7 +185,7 @@ mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS agent_chat_db CHARACTER SET u
 cmd /c "mysql -u root -p agent_chat_db < db.sql"
 ```
 
-不要提交包含真实密钥或密码的 `api_key.env`。
+不要提交包含真实密钥或密码的 `api_key.env`。如果该文件曾被提交到 Git 或推送到远程仓库，仅从当前版本删除还不够，必须同时轮换其中的 API Key、数据库密码，并按团队协作情况决定是否清理 Git 历史。
 
 ## 启动应用
 
@@ -189,42 +214,16 @@ streamlit run main.py
 
 ### 输出位置
 
-- `temp/auto_generated_formation.csv`：图文融合生成的地层配置。
-- `temp/virtual_boreholes_points.csv`：生成的虚拟钻孔点云。
-- `output/<图件名_时间戳>/`：图例、区域匹配和可视化结果。
-- `experiments/output/`：验证报告、JSON 数据及统计图。
+- `runtime/sessions/<session_id>/uploads/<batch_id>/`：当前会话上传的数据。
+- `runtime/sessions/<session_id>/runs/<request_id>/auto_generated_formation.csv`：图文融合地层配置。
+- `runtime/sessions/<session_id>/runs/<request_id>/virtual_boreholes_points.csv`：虚拟钻孔点云。
+- `runtime/sessions/<session_id>/runs/<request_id>/image_analysis/`：图例、区域匹配和可视化结果。
+- `runtime/checkpoints/langgraph.sqlite`：可跨应用重启恢复的 LangGraph Checkpoint。
+- 实验结果、论文图件和验证报告保留在本地，不纳入源码仓库。
 
 ## 质量验证
 
-运行内置模拟数据演示：
-
-```powershell
-python experiments/run_validation.py --demo
-```
-
-对真实输入运行全部验证：
-
-```powershell
-python experiments/run_validation.py --all `
-  --virtual_csv temp/virtual_boreholes_points.csv `
-  --formation_csv temp/auto_generated_formation.csv `
-  --shp_path "path/to/geology.shp" `
-  --dem_path "path/to/dem.tif"
-```
-
-如需执行真实钻孔盲测，可增加：
-
-```powershell
---real_csv "path/to/real_boreholes.csv"
-```
-
-查看所有参数：
-
-```powershell
-python experiments/run_validation.py --help
-```
-
-验证模块覆盖：
+本项目在本地研究环境中开展以下验证，实验代码、输入数据与生成图件不随源码仓库发布：
 
 1. 真实钻孔盲测：计算 RMSE、MAE 和决定系数等指标。
 2. 地质剖面验证：提取指定剖面带内的钻孔点并支持二维拓扑 IoU 分析。
@@ -235,8 +234,9 @@ python experiments/run_validation.py --help
 ## 实现边界
 
 - 主应用中的 `GempyAgent` 当前负责虚拟钻孔点云生成，并未直接执行 GemPy 隐式模型求解。
-- GemPy 建模代码位于 `experiments/modeling/`，用于读取钻孔点并开展实验性三维建模。
+- GemPy 建模与定量验证属于本地实验内容，不包含在源码发布包中。
 - Agent 编排目前是单次路由和工具执行，不是多个 Agent 自由对话或多轮协商。
+- LangGraph Checkpoint 使用本地 SQLite 持久化，可在单机应用重启后恢复；多实例部署时应迁移到 PostgreSQL 等共享 Checkpointer。
 - MySQL 保存会话和分析结果；Neo4j 不可用时，知识图谱仍可在内存中生成和展示。
 - 模型输出、图像匹配和规则生成均存在不确定性，重要结果应结合专家审查和真实数据验证。
 
@@ -244,4 +244,4 @@ python experiments/run_validation.py --help
 
 - `api_key.env`、运行缓存和生成目录已列入 `.gitignore`。
 - 如果敏感配置曾经提交到 Git，仅添加忽略规则不能清除历史记录，应及时轮换凭据并清理仓库历史。
-- PEACE 模型权重和部分实验数据体积较大，团队协作时可以考虑使用 Git LFS 或独立模型存储。
+- PEACE 模型权重、实验数据和论文图件不进入源码仓库，应通过独立模型或数据存储分发。
