@@ -35,6 +35,7 @@ experiments/output/
 # Source-only repository: local experiments, papers, figures and datasets
 /experiments/
 /work/
+/verify_data.py
 *.png
 *.jpg
 *.jpeg
