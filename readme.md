@@ -11,11 +11,13 @@
 - 多模态融合：并行处理文本和图像信息，通过大模型完成地层实体对齐，生成标准地层配置。
 - 虚拟钻孔生成：结合 SHP 边界、DEM 高程、地层厚度、空间扰动和尖灭规则生成钻孔点云。
 - 知识图谱构建：抽取地层、年代、岩性、构造和空间分布关系，可选写入 Neo4j。
-- 交互与持久化：通过 Streamlit 提供文件上传、任务执行与结果展示，并使用 MySQL 保存会话记录。
+- 文档接入：普通文本使用 Python 原生解析，Word/PDF 的正文、结构与表格统一使用 MinerU，不再依赖 Docling。
+- 交互与持久化：通过 Streamlit 展示抽取实体、剖面、图件和生成结果；融合任务支持人工确认、版本化修正与 Checkpoint 恢复，MySQL 保存会话记录。
 
 ## 技术体系
 
 - Agent 编排：LangChain、LangGraph
+- 文档解析：Python 原生读取、MinerU
 - 大模型：Qwen、Qwen-VL、DeepSeek（通过兼容的模型服务调用）
 - 视觉处理：PyTorch、YOLO、OpenCV、PEACE
 - 地理计算：GeoPandas、Rasterio、PyProj、Shapely
@@ -24,40 +26,43 @@
 
 ## 系统架构
 
-```text
-用户指令 + TXT/JPG/PNG/CSV/SHP/TIF
-                  |
-                  v
-        MasterAgent（意图路由）
-                  |
-        +---------+----------+----------------+
-        |                    |                |
-        v                    v                v
- TextExtractionAgent          ImageAnalysisAgent       KnowledgeGraphAgent
- 文本结构化抽取       图例与区域解析       实体关系抽取
-        |                    |                |
-        +---------+----------+                +--> Neo4j（可选）
-                  |
-                  v
-          LLM 地层对齐与融合
-                  |
-                  v
-       标准地层配置 CSV + 空间约束
-                  |
-                  v
-             BoreholeGenerator
-                  |
-                  v
-         虚拟钻孔点云 CSV
+```mermaid
+flowchart TD
+    U[用户指令与上传文件] --> P[保存输入快照 按需解析报告]
+    P --> R{MasterAgent 意图路由}
+    R -->|文本抽取| T[TextExtractionAgent]
+    R -->|图件分析| I[ImageAnalysisAgent]
+    R -->|知识图谱| K[KnowledgeGraphAgent]
+    R -->|图文融合或虚拟钻孔| B{是否提供地层 CSV}
+    R -->|普通问答| C[直接回答]
+    T --> O[展示本次任务结果]
+    I --> O
+    K --> O
+    K -. 可选写入 .-> N[(Neo4j)]
+    B -->|否| F[并行文本抽取与图件分析]
+    F --> A[汇合并确认不确定的图例地层对应]
+    A --> G[LLM 融合与证据关联]
+    B -->|是| A2[保留用户配置 确认需要的对应关系]
+    A2 --> V[代码硬约束与 LLM 语义复核]
+    G --> V
+    V -->|自动生成配置可修复| G
+    V -->|无法自动修复| H[保存问题 等待用户修正]
+    H -. 修正配置后重新校验 .-> V
+    V -->|通过| D[按需确认默认厚度]
+    D -->|修改厚度后重新校验| V
+    D -->|确认或无需确认| S[空间计算或输出地层配置]
+    S --> O
 ```
 
 ### Agent 通信方式
 
 当前系统采用显式图节点编排：`MasterAgent` 的路由节点输出经过 Pydantic 校验的任务类型，条件边选择文本、图像、知识图谱节点或钻孔流程。各节点直接调用专业 Agent 的独立图，通过共享 State 交换业务结果；主控不再将子 Agent 注册为 LangChain Tool。`messages` 使用 `add_messages` Reducer，执行日志和错误追加合并，节点监控按节点名合并；图通过 SQLite `SqliteSaver` 持久化检查点，以`会话ID:任务ID`作为`thread_id`。各 Agent 运行在同一进程内。
 
-自动钻孔任务通过图的并行分支执行文本抽取和图像解析，等待两路完成后进入融合节点。独立校验节点检查地层配置，失败时通过条件边回到融合节点，最多额外修复两次；通过后才进入空间计算节点。用户提供的 CSV 直接校验，不由模型重写。文本 Agent 内部保留自主选择报告检索等工具的能力。每轮调用前，系统将当前 MySQL 会话最近的用户与助手消息转换为 LangChain 消息，作为路由上下文。节点和状态流转说明见 [代码结构](docs/code-structure.md)。
+自动钻孔任务通过图的并行分支执行文本抽取和图像解析，等待两路完成后进入对齐与融合流程。校验节点先执行代码硬约束，再执行默认开启的 LLM 语义复核；允许自动修复时通过条件边返回融合节点，最多额外修复两次，无法修复的问题保存后等待用户处理。用户提供的 CSV 直接校验，不由模型重写。文本 Agent 内部可自主选择报告检索、章节读取和地层词典工具。每轮调用前，系统将当前 MySQL 会话最近的用户与助手消息转换为 LangChain 消息，作为路由上下文；专业 Agent 只接收映射后的任务输入，不自动共享彼此的完整工具对话。节点和状态流转说明见 [代码结构](docs/code-structure.md)。
 
-每个任务先保存输入文件快照，再按需解析报告。融合字段引用原文块、图例或用户修正证据，程序检查引用、数值、地层归属及明确的层序关系。未解决的问题连同中间结果保存为待复核任务；界面的“任务记录与复核”支持编辑配置、替换报告或图件、定向重试，沿用任务ID并生成新版本。默认厚度和用户确认值分别标注，保留来源区别。
+每个任务先保存输入文件快照，再按需解析报告。融合字段引用原文块、图例或用户修正证据，程序检查引用、数值、单位、地层归属及明确的层序关系。融合任务的未解决问题连同中间结果保存为待复核任务；界面的“任务记录与复核”支持编辑配置、替换报告或图件、定向重试，沿用任务 ID 并生成新版本。独立文本抽取直接完成并展示结果，缺少直接原文证据仅作提示，不要求人工确认。
+
+融合流程对不确定的图例与地层对应关系、缺少厚度而采用默认 30 米的情况使用 LangGraph 原生 `interrupt()`。用户可选择候选地层、接受默认值、修改厚度或暂不处理；备注可留空。提交后通过同一图线程的 `Command(resume=...)` 继续，仍有未解决项时保持暂停。接受默认厚度仍标记为默认值，手动填写的厚度保存为人工值及其证据。
 
 任务在后台执行，界面“停止生成”发送实际取消请求；取消在调用边界及计算循环中生效。模型请求使用全进程统一并发上限，分块线程继承任务上下文。各次节点、模型和工具调用的开始、结束、父调用、Token和估算费用写入事件表；缺少用量或单价时费用显示未知。并发和单价配置见config/api_key.env.example。
 
@@ -77,7 +82,9 @@ Checkpoint 使用精确的业务模型类型白名单，支持严格 MsgPack 反
 
 ### 1. 文本信息抽取
 
-长篇地质报告经过重叠分块后并发提交给语言模型，并按照 Pydantic Schema 输出：
+上传报告先转换为带标题、内容块和来源位置的统一文档，再交给语言模型抽取。TXT、Markdown、JSON 和 HTML 使用 Python 原生解析，Word/PDF 只使用 MinerU；表格直接保留 MinerU 的输出，不再运行 Docling 或额外的 LibreOffice 转换。解析器不是抽取模型，解析后的正文仍会实际发送给 LLM。
+
+结构化文档按内容块组织抽取单元，目标约 6000 字符，表格保持完整；直接传入纯文本时使用 6000 字符、300 字符重叠的切分。各分块并发执行，有独立消息列表，可检索同一份本次报告库。最终按照 Pydantic Schema 输出：
 
 - 地层名称与代号
 - 主、次地质年代及代号
@@ -85,6 +92,10 @@ Checkpoint 使用精确的业务模型类型白名单，支持严格 MsgPack 反
 - 剖面位置、厚度和岩石组合
 - 上覆与下伏地层
 - 条目置信度
+
+实体字段不要求完整，缺失值保留为 `null`，不按置信度过滤实体。结构化输出解析异常时可回退到明确的 JSON 数据模板重试；首次得到空结果时再核对一次。返回 Schema 定义、缺少业务结果键或完全没有业务字段的实体会判为异常，不能直接当作空抽取成功。
+
+前端展示抽取数量、地层实体表、剖面表和含证据信息的 JSON 下载。部分字段找不到直接原文证据时保留提示，任务正常完成，不进入人工确认。用户上传的图片在聊天区域右侧显示。
 
 ### 2. 地质图件解析
 
@@ -98,6 +109,8 @@ Checkpoint 使用精确的业务模型类型白名单，支持严格 MsgPack 反
 part_code, formation, formation_code, formation_age_1,
 formation_age_code_1, formation_age_2, formation_age_code_2, 厚度
 ```
+
+其中 `formation_code` 是从 1 开始递增的建模层序编号，区别于文本抽取中的原始地层代号；`厚度` 按米解释。字段证据、报告值/默认值/人工值分类和校验记录保存于任务状态及审计文件，CSV 保持八列格式。
 
 ### 4. 虚拟钻孔生成
 
@@ -120,6 +133,7 @@ agent_modeling/
 |   |-- storage/             # MySQL、Neo4j、工作区与状态保存
 |   |-- config.py            # 路径、配置和追踪
 |   |-- errors.py            # 异常与错误码
+|   |-- execution.py         # 后台任务、调用事件、并发和取消控制
 |   |-- models.py            # 统一业务数据模型
 |   |-- orchestrator.py      # 主控路由与任务编排
 |   |-- fusion.py            # 图文匹配、融合生成和校验
@@ -140,7 +154,7 @@ agent_modeling/
 
 ## 环境准备
 
-建议在独立环境中安装依赖。GDAL、GeoPandas、Rasterio、VTK 和 GemPy 含本地二进制依赖，需要保证 Python 版本与安装包兼容。
+建议在独立环境中安装依赖。GDAL、GeoPandas、Rasterio、VTK 和 GemPy 含本地二进制依赖，需要保证 Python 版本与安装包兼容。`requirements.txt` 保留了当前环境的固定版本，其中 PyTorch 使用 `+cpu` 版本；首次安装时可能需要匹配的 CPU 软件源，不能保证所有平台直接安装成功。
 
 ```powershell
 python -m venv .venv
@@ -177,6 +191,16 @@ Copy-Item config/api_key.env.example api_key.env
 | `DB_HOST`、`DB_PORT` | 是 | MySQL 地址与端口 |
 | `DB_USER`、`DB_PASSWORD`、`DB_NAME` | 是 | MySQL 认证与数据库名称 |
 | `NEO4J_URI`、`NEO4J_USER`、`NEO4J_PASSWORD` | 否 | 知识图谱持久化 |
+| `DOCUMENT_MINERU_TIER` | Word/PDF 解析时 | MinerU 档位，默认 `standard` |
+| `DOCUMENT_MINERU_API_URL`、`MINERU_API_KEY` | 否 | 自建 MinerU 服务地址和可选密钥；地址为空时使用本地 SDK |
+| `TEXT_AGENT_DICTIONARY_PATH` | 否 | 文本 Agent 查询的 UTF-8 JSON 地层词典 |
+| `APP_SEMANTIC_REVIEW` | 否 | 是否执行融合语义复核，默认 `true`；代码硬约束始终执行 |
+| `APP_SEMANTIC_REVIEW_MODEL` | 否 | 单独指定语义复核模型，留空沿用主模型 |
+| `APP_MAX_MODEL_CONCURRENCY` | 否 | 进程内模型调用并发上限，默认 `4` |
+| `APP_MAX_WORKERS`、`APP_MAX_NODE_CONCURRENCY` | 否 | 后台任务/分块工作线程上限与单次图执行的节点并发上限，默认分别为 `4`、`2` |
+| `APP_MODEL_PRICES_JSON` | 否 | 按模型配置每百万输入/输出 Token 单价，用于估算费用 |
+
+MinerU 的额外依赖在 `requirements/documents.txt`。本地模式还需准备对应模型和运行环境；安装 SDK 并不表示解析模型已就绪。配置变化后重启应用，完整配置见 [配置模板](config/api_key.env.example) 和 [文档解析说明](docs/document-ingestion.md)。
 
 `database/schema.sql` 只负责创建数据表。请先创建与 `DB_NAME` 一致的数据库，再导入表结构。默认数据库名为 `agent_chat_db`：
 
@@ -199,7 +223,7 @@ streamlit run app.py
 
 | 数据类型 | 扩展名 | 说明 |
 |---|---|---|
-| 地质报告 | `.txt`、`.md`、`.json`、`.html`、`.doc`、`.docx`、`.pdf` | 普通文本使用原生解析，Word/PDF 的正文、结构和表格统一使用 MinerU |
+| 地质报告 | `.txt`、`.md`、`.markdown`、`.json`、`.html`、`.htm`、`.doc`、`.docx`、`.pdf` | 普通文本使用原生解析，Word/PDF 的正文、结构和表格统一使用 MinerU |
 | 地质图件 | `.jpg`、`.png` | 默认使用第一张图片执行图像任务 |
 | 地层配置 | `.csv` | 可跳过自动图文融合，直接用于虚拟下钻 |
 | 地质边界 | `.shp`、`.shx`、`.dbf`、`.prj`、`.cpg` | 辅助文件应与 SHP 同名并放在同一目录 |
@@ -212,23 +236,34 @@ streamlit run app.py
 - 自动生成钻孔至少需要 SHP 和地层配置 CSV；DEM 缺失时会使用默认高程。
 - 图像轮廓到地理空间的映射目前依据图像范围和 SHP 包围盒进行线性转换，不等同于严格的地理配准。
 
-### 输出位置
+### 输出与状态保存
 
-- `runtime/sessions/<session_id>/uploads/<batch_id>/`：当前会话上传的数据。
-- `runtime/sessions/<session_id>/runs/<request_id>/auto_generated_formation.csv`：图文融合地层配置。
-- `runtime/sessions/<session_id>/runs/<request_id>/virtual_boreholes_points.csv`：虚拟钻孔点云。
-- `runtime/sessions/<session_id>/runs/<request_id>/image_analysis/`：图例、区域匹配和可视化结果。
-- `runtime/checkpoints/langgraph.sqlite`：可跨应用重启恢复的 LangGraph Checkpoint。
-- `runtime/checkpoints/tasks.sqlite`：任务、版本、待解决问题、可恢复业务快照、逐次调用事件及取消标志。
+前端任务默认使用以下目录；直接调用 Python API 并指定 `workspace_dir` 时，运行目录以调用方配置为准。
+
+| 路径 | 内容 |
+| --- | --- |
+| `runtime/sessions/<session_id>/uploads/<batch_id>/` | 当前会话上传的数据 |
+| `runtime/sessions/<session_id>/documents/<cache_key>/` | 会话内统一文档 JSON 与 MinerU 解析产物 |
+| `runtime/sessions/<session_id>/runs/<request_id>/<task_id>/v<version>/` | 当前任务版本的输入快照、结果及审计产物 |
+| `runtime/checkpoints/langgraph.sqlite` | LangGraph 状态、原生中断和恢复位置 |
+| `runtime/checkpoints/tasks.sqlite` | 任务索引、版本、问题、业务快照、逐次调用事件及取消标志 |
+
+任务版本目录按执行阶段生成 `task_result.json`、`auto_generated_formation.csv`、
+`fusion_alignment_audit.json`、`fusion_validation_trace.json`、`legend_formation_mapping.json`、
+`virtual_boreholes_points.csv` 和 `image_analysis/`，不保证每种任务都有全部文件。
+人工修正生成新版本，已有版本产物保留。页面提供地层配置、钻孔数据和阶段抽取结果的下载入口。
 
 ## 实现边界
 
 - 主应用中的 `BoreholeGenerator` 当前负责虚拟钻孔点云生成，并未直接执行 GemPy 隐式模型求解。
 - 当前项目不包含独立 GemPy 建模与定量验证实验脚本。
-- Agent 编排目前是单次路由和工具执行，不是多个 Agent 自由对话或多轮协商。
+- Agent 编排采用一次意图路由、显式图节点及有限的融合修复循环，尚未实现持续规划和动态重新分派的 Supervisor。
 - LangGraph Checkpoint 使用本地 SQLite 持久化，可在单机应用重启后恢复；多实例部署时应迁移到 PostgreSQL 等共享 Checkpointer。
 - MySQL 保存会话和分析结果；Neo4j 不可用时，知识图谱仍可在内存中生成和展示。
 - 模型输出、图像匹配和规则生成均存在不确定性，重要结果应结合专家审查和真实数据验证。
+- 语义复核基于已抽取结果与证据库，不会自动重新阅读全部文档、图像或调度文本 Agent 补抽；不确定时可进入融合复核流程。
+- 条目和整体置信度属于模型自评与工程聚合，尚未经实验校准，不能直接当作正确概率。
+- 后台线程池和并发控制属于单进程运行机制；运行中的模型请求不能保证立即取消，也不提供分布式任务队列能力。
 
 ## 安全与版本管理
 
@@ -241,5 +276,9 @@ streamlit run app.py
 ```powershell
 python -m unittest discover -s tests -v
 ```
+
+请在安装了 LangGraph 和 SQLite Checkpointer 的应用环境运行，以覆盖图执行、并行汇合、
+原生中断与恢复测试。模型调用、MinerU 和视觉服务主要使用替身验证协议与失败处理；
+这些测试不代表真实 OCR、表格恢复和地质抽取准确率，实际部署仍需使用真实报告及图件联调。
 
 详细包职责与旧文件迁移关系见 [代码结构说明](docs/code-structure.md)；文档解析配置见 [文档解析说明](docs/document-ingestion.md)。
