@@ -14,7 +14,7 @@ env/
 
 # Local credentials (keep the documented template)
 api_key.env
-!.api_key.env.example
+!config/api_key.env.example
 
 # IDE and operating-system metadata
 .idea/
@@ -54,4 +54,4 @@ experiments/output/
 
 # Local configuration; keep only the sanitized template
 *.env
-!.api_key.env.example
+!config/api_key.env.example

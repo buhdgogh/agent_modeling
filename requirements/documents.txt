@@ -1,0 +1,3 @@
+# Optional document ingestion SDKs; install separately from the main model stack.
+# MinerU adapter targets the public 4.x parser/render API, not legacy 2.x CLI.
+mineru>=4.0,<5

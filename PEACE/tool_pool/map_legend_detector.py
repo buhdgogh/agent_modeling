@@ -137,9 +137,3 @@ class map_legend_detector:
             idx += 1
 
         return legends
-
-if __name__ == "__main__":
-    det = map_legend_detector()
-    # 替换为你实际的路径
-    results = det.detect(os.path.join(os.getcwd(), "E4901.JPG"))
-    print(results)

@@ -1,0 +1,1 @@
+"""Geological analysis application."""
